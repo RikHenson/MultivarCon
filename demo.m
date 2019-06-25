@@ -1,5 +1,6 @@
 close all
-clear;clc;
+clear;
+clc;
 rng('default')
 
 % Parameters setting
@@ -10,11 +11,26 @@ nruns = 2; %number of runs. MVPD requires at least 2 runs.
 opt.method='pca_exvar';
 opt.percentage=99;
 
+
+%% Baseline example: presence of correlated voxel activities within a ROI (where both Uni and Multi work)
+
+fnam = 'Presence of correlated voxel activities within a ROI';
+T = eye(nvoxels); % mapping across ROIs
+C = kron([1 0.9; 0.9 1],eye(nvoxels/2)); % correlation within ROI
+Ya = {}; Yb = {};
+for g=1:nSubj
+    for r=1:nruns
+        Ya{g}{r} = mvnrnd(zeros(nt,nvoxels),C);
+        Yb{g}{r} = Ya{g}{r}*T + randn(nt,nvoxels);
+    end
+end
+plotmv(fnam,T,Ya,Yb,opt,1);
+
 %% First example: presence of anticorrelated voxel activities within a ROI
 
 fnam = 'Presence of anticorrelated voxel activities within a ROI';
 T = eye(nvoxels); % mapping across ROIs
-C = kron([1 -0.99; -0.99 1],eye(nvoxels/2)); % correlation within ROI
+C = kron([1 -0.9; -0.9 1],eye(nvoxels/2)); % correlation within ROI
 Ya = {}; Yb = {};
 for g=1:nSubj
     for r=1:nruns
@@ -52,7 +68,7 @@ for g=1:nSubj
         Yb{g}{r} = Yb{g}{r}   + 5*repmat(randn(nt,1),1,nvoxels);
     end
 end
-plotmv(fnam,T,Ya,Yb,opt,0);
+plotmv(fnam,T,Ya,Yb,opt,1);
 
 
 %% Fourth example: stimulus-dependent linear mapping
@@ -61,13 +77,14 @@ fnam = 'Stimulus-dependent linear mapping';
 C = eye(nvoxels);
 Ya = {}; Yb = {};
 for g=1:nSubj
-    for r=1:3
+    for r=1:nruns
        Ya{g}{r} = mvnrnd(zeros(nt,nvoxels),C);
-       T = randn(nvoxels);
+%       T = randn(nvoxels);
+        T = rand(nvoxels)*2-1;
        Yb{g}{r} = Ya{g}{r}*T + randn(nt,nvoxels);
     end
 end
-plotmv(fnam,T,Ya,Yb,opt,0);
+plotmv(fnam,T,Ya,Yb,opt,1);
 
 %% Fifth example: pooling across multiple instances of a condition makes RC more sensitive at the RC level for independent noise
 
