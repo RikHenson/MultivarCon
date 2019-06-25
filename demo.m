@@ -1,6 +1,5 @@
 close all
-clear;
-clc;
+clear;clc;
 rng('default')
 
 % Parameters setting
