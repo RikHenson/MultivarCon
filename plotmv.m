@@ -1,4 +1,4 @@
-function [fc, uvpd,mvpd,dcor_u,dcor, rca] = plotmv1(fnam,T,Ya,Yb,opt,vis);
+function [fc, uvpd,mvpd,dcor_u,dcor, rca] = plotmv(fnam,T,Ya,Yb,opt,vis);
 
 figure('name',fnam,'Color','w');
 % plot the transformation
