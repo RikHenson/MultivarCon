@@ -1,11 +1,26 @@
-function [fc, uvpd,mvpd,dcor_u,dcor, rca] = plotmv1(fnam,T,Ya,Yb,opt,vis);
+function [fc,uvpd,mvpd,dcor_u,dcor,rca] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
 
-figure('name',fnam,'Color','w');
+figure('name',fnam,'Color','w','Position',[1 1 2*560 1.5*480]);
+
+% plot the ROI covariance
+subplot(3,2,1)
+imagesc(C)
+%colormap jet
+colormap gray
+axis square
+caxis([-1 1])
+colorbar
+title('ROI1 voxel covariance')
+xlabel('Voxels in ROI1')
+ylabel('Voxels in ROI1')
+set(gca,'XTick',[]); set(gca,'YTick',[])
+
 % plot the transformation
-subplot(2,2,1)
+subplot(3,2,2)
 imagesc(T)
 %colormap jet
 colormap gray
+%axis square
 caxis([-1 1])
 colorbar
 title('Functional mapping')
@@ -13,50 +28,107 @@ xlabel('Voxels in ROI2')
 ylabel('Voxels in ROI1')
 set(gca,'XTick',[]); set(gca,'YTick',[])
 
-if (vis==1)
-    
-    %plot the time series for the ROI1 and run1 
-    v1 = 1; v2 = round(size(Ya{1}{1},2)/2)+1;
-    maxY = max([Ya{1}{1}(:,v1); Ya{1}{1}(:,v2); Yb{1}{1}(:,v1); Yb{1}{1}(:,v2)]);
-    minY = min([Ya{1}{1}(:,v1); Ya{1}{1}(:,v2); Yb{1}{1}(:,v1); Yb{1}{1}(:,v2)]);
 
-    C=floor(1000*corrcoef(Ya{1}{1}(:,v1),Ya{1}{1}(:,v2)))/1000;
-    subplot(2,2,3)
-    plot(Ya{1}{1}(1:50,v1),':k','LineWidth',2)
+%plot the timeseries for first 50 timepoints in run 1... 
+if length(vis) == 4  % assume passing 2 voxel indices
+
+    %...for just one voxel from ROI1
+    maxY = max([Ya{1}{1}(:,vis(1)); Ya{1}{1}(:,vis(2)); Yb{1}{1}(:,vis(3)); Yb{1}{1}(:,vis(4))]);
+    minY = min([Ya{1}{1}(:,vis(1)); Ya{1}{1}(:,vis(2)); Yb{1}{1}(:,vis(3)); Yb{1}{1}(:,vis(4))]);
+    
+    C=floor(1000*corrcoef(Ya{1}{1}(:,vis(1)),Ya{1}{1}(:,vis(2))))/1000;
+    
+    subplot(3,2,3)
+    plot(Ya{1}{1}(1:50,vis(1)),':k','LineWidth',2)
     hold on
-    plot(Ya{1}{1}(1:50,v2),'k','LineWidth',2)
+    plot(Ya{1}{1}(1:50,vis(2)),'k','LineWidth',2)
     axis([1 50 minY maxY])
     title(strcat('ROI1, corr=',num2str(C(1,2))))
     xlabel('Time')
     ylabel('a.u.')
-    legend('voxel1','voxel2','Location','best')
+    legend(sprintf('voxel%d',vis(1)),sprintf('voxel%d',vis(2)),'Location','best')
 
-    % plot the time series for the ROI2 and run1
-    C=floor(1000*corrcoef(Yb{1}{1}(:,1),Yb{1}{1}(:,v2)))/1000;
-    subplot(2,2,4)
-    plot(Yb{1}{1}(1:50,v1),':k','LineWidth',2)
+    % ...and one voxel from ROI 2
+    C=floor(1000*corrcoef(Yb{1}{1}(:,1),Yb{1}{1}(:,vis(4))))/1000;
+    subplot(3,2,4)
+    plot(Yb{1}{1}(1:50,vis(3)),':k','LineWidth',2)
     hold on
-    plot(Yb{1}{1}(1:50,v2),'k','LineWidth',2)
+    plot(Yb{1}{1}(1:50,vis(4)),'k','LineWidth',2)
     axis([1 50 minY maxY])
     title(strcat('ROI2, corr=',num2str(C(1,2))))
     xlabel('Time')
     ylabel('a.u.')
-    legend('voxel1','voxel2','Location','best')
+    legend(sprintf('voxel%d',vis(3)),sprintf('voxel%d',vis(4)),'Location','best')
+
+elseif vis == 2
     
+    %...or all voxels from ROI1
+    maxY = max([Ya{1}{1}(:); Ya{1}{1}(:); Yb{1}{1}(:); Yb{1}{1}(:)]);
+    minY = min([Ya{1}{1}(:); Ya{1}{1}(:); Yb{1}{1}(:); Yb{1}{1}(:)]);
+     
+    subplot(3,2,3)
+    imagesc(Ya{1}{1}(1:50,:)')
+    hold on
+%    axis([1 50 minY maxY])
+    xlabel('Time')
+    ylabel('voxel')
+ 
+    %...and all voxels from ROI2
+    subplot(3,2,4)
+    imagesc(Yb{1}{1}(1:50,:)')
+    hold on
+%    axis([1 50 minY maxY])
+    xlabel('Time')
+    ylabel('voxel')
 end
 
+% Calculate connectivity on data given
 for g=1:length(Ya)
-    [mvpd(g),uvpd(g),fc(g)] = data2mvpd(Ya{g},Yb{g},opt); 
-    [dcor(g),dcor_u(g)] = data2dCor(Ya{g},Yb{g});
-    [rc(g),~] = data2rc(Ya{g},Yb{g},'correlation');
+    [mvpd(g,1),uvpd(g,1),fc(g,1)] = data2mvpd(Ya{g},Yb{g},opt); 
+    [dcor(g,1),dcor_u(g,1)] = data2dCor(Ya{g},Yb{g});
+    [rc(g,1),~] = data2rc(Ya{g},Yb{g},'correlation');
 end
 
-% plot the performance
-subplot(2,2,2)
+% Calculate connectivity when Ya and Yb independent random noise (since
+% some connectivity measures, eg Dcor, not bounded by 0 or -1)
+for g=1:length(Ya)
+    bYa = {}; bYb = {};
+    for r=1:length(Ya{g})
+        bYa{r} = Ya{g}{r}(randperm(size(Ya{g}{r},1)),:); 
+        bYb{r} = Yb{g}{r}(randperm(size(Yb{g}{r},1)),:); 
+    end
+    [bmvpd(g,1),buvpd(g,1),bfc(g,1)] = data2mvpd(bYa,bYb,opt); 
+    [bdcor(g,1),bdcor_u(g,1)] = data2dCor(bYa,bYb);
+    [brc(g,1),~] = data2rc(bYa,bYb,'correlation');
+end
+
+% plot the absolute performance
+subplot(3,2,5), hold on
 c = categorical({'1 Pearson','2 UVPD','3 MVPD','4 UVdCor','5 dCor','6 RCA'});
-bar(c,[mean(fc),mean(uvpd),mean(mvpd),mean(dcor_u),mean(dcor),mean(rc)],'FaceColor',[0.5,0.5,0.5])
-hold
-errorbar(c,[mean(fc),mean(uvpd),mean(mvpd),mean(dcor_u),mean(dcor),mean(rc)],[std(fc),std(uvpd),std(mvpd),std(dcor_u),std(dcor),std(rc)],'ko','MarkerSize',1,'CapSize',15)
+meanvl = mean([fc uvpd mvpd dcor_u dcor rc]);
+spread = std([fc uvpd mvpd dcor_u dcor rc]);
+%spread = iqr([fc uvpd mvpd dcor_u dcor rc]);
+bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
+errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
 temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
-title('Performance')
+title('Absolute Performance')
+
+subplot(3,2,6), hold on
+meanvl = meanvl - mean([bfc buvpd bmvpd bdcor_u bdcor brc]);
+spread = sqrt(spread.^2 + var([fc uvpd mvpd dcor_u dcor rc]));
+bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
+errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
+%bar(c,meanvl./spread,'FaceColor',[0.25,0.25,0.25])
+temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
+title('Normalised Performance')
+
+
+% subplot(3,2,6), hold on
+% meanvl = mean([bfc buvpd bmvpd bdcor_u bdcor brc]);
+% spread = std([fc uvpd mvpd dcor_u dcor rc]);
+% bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
+% errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
+% temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
+% title('Normalised Performance')
+% 
 
