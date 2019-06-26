@@ -1,4 +1,4 @@
-function [fc,uvpd,mvpd,dcor_u,dcor,rca] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
+function [fc,uvpd,mvpd,dcor_u,dcor,rc] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
 
 figure('name',fnam,'Color','w','Position',[1 1 2*560 1.5*480]);
 
@@ -28,8 +28,9 @@ xlabel('Voxels in ROI2')
 ylabel('Voxels in ROI1')
 set(gca,'XTick',[]); set(gca,'YTick',[])
 
+nTime = min(size(Ya{1}{1},1),50);
 
-%plot the timeseries for first 50 timepoints in run 1... 
+%plot the timeseries for first nTime timepoints in run 1... 
 if length(vis) == 4  % assume passing 2 voxel indices
 
     %...for just one voxel from ROI1
@@ -39,24 +40,24 @@ if length(vis) == 4  % assume passing 2 voxel indices
     C=floor(1000*corrcoef(Ya{1}{1}(:,vis(1)),Ya{1}{1}(:,vis(2))))/1000;
     
     subplot(3,2,3)
-    plot(Ya{1}{1}(1:50,vis(1)),':k','LineWidth',2)
+    plot(Ya{1}{1}(1:nTime,vis(1)),':k','LineWidth',2)
     hold on
-    plot(Ya{1}{1}(1:50,vis(2)),'k','LineWidth',2)
-    axis([1 50 minY maxY])
+    plot(Ya{1}{1}(1:nTime,vis(2)),'k','LineWidth',2)
+    axis([1 nTime minY maxY])
     title(strcat('ROI1, corr=',num2str(C(1,2))))
-    xlabel('Time')
+    xlabel('Time or Trial')
     ylabel('a.u.')
     legend(sprintf('voxel%d',vis(1)),sprintf('voxel%d',vis(2)),'Location','best')
 
     % ...and one voxel from ROI 2
     C=floor(1000*corrcoef(Yb{1}{1}(:,1),Yb{1}{1}(:,vis(4))))/1000;
     subplot(3,2,4)
-    plot(Yb{1}{1}(1:50,vis(3)),':k','LineWidth',2)
+    plot(Yb{1}{1}(1:nTime,vis(3)),':k','LineWidth',2)
     hold on
-    plot(Yb{1}{1}(1:50,vis(4)),'k','LineWidth',2)
-    axis([1 50 minY maxY])
+    plot(Yb{1}{1}(1:nTime,vis(4)),'k','LineWidth',2)
+    axis([1 nTime minY maxY])
     title(strcat('ROI2, corr=',num2str(C(1,2))))
-    xlabel('Time')
+    xlabel('Time or Trial')
     ylabel('a.u.')
     legend(sprintf('voxel%d',vis(3)),sprintf('voxel%d',vis(4)),'Location','best')
 
@@ -67,17 +68,17 @@ elseif vis == 2
     minY = min([Ya{1}{1}(:); Ya{1}{1}(:); Yb{1}{1}(:); Yb{1}{1}(:)]);
      
     subplot(3,2,3)
-    imagesc(Ya{1}{1}(1:50,:)')
+    imagesc(Ya{1}{1}(1:nTime,:)')
     hold on
-%    axis([1 50 minY maxY])
+%    axis([1 nTime minY maxY])
     xlabel('Time')
     ylabel('voxel')
  
     %...and all voxels from ROI2
     subplot(3,2,4)
-    imagesc(Yb{1}{1}(1:50,:)')
+    imagesc(Yb{1}{1}(1:nTime,:)')
     hold on
-%    axis([1 50 minY maxY])
+%    axis([1 nTime minY maxY])
     xlabel('Time')
     ylabel('voxel')
 end
