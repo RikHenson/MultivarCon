@@ -122,12 +122,13 @@ vis = 2;
 [fc,uvpd,mvpd,dcor_u,dcor,rc] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
 
 %% Seventh example: averaging timepoints (trials) with same stimulus improves RCA
+%% 
 
 fnam = 'Negative correlations induced by the functional mapping; averaging across stimuli of same type';
 %T = rand(nVoxs)-0.5;
 T = zeros(nVoxs); for j=1:mVoxs/2; T(j,j)=1; T(j+mVoxs/2,j+mVoxs/2)=-1; end
-
-nStim = 20;
+Noise = 2;
+nStim = 10;
 nRep  = nTime/nStim;  % Assumes a factor of nTime
 stimuli = repmat([1:nStim],1,nRep);
 
@@ -138,8 +139,9 @@ Ya = {}; Yb = {};
 for g=1:nSubj
     for r=1:nRuns
         Ya{g}{r} = mvnrnd(zeros(nStim,nVoxs(1)),C);
-        Ya{g}{r} = repmat(Ya{g}{r},nRep,1) + Noise*randn(nTime,nVoxs(1));  % Repeat same pattern with independent noise
+        Ya{g}{r} = repmat(Ya{g}{r},nRep,1);  % Repeat same pattern 
         Yb{g}{r} = Ya{g}{r}*T + Noise*randn(nTime,nVoxs(2));
+        Ya{g}{r} = Ya{g}{r} + Noise*randn(nTime,nVoxs(1));  % independent noise
     end
 end
 
@@ -162,5 +164,6 @@ vis = 2;
 %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
 [sfc,suvpd,smvpd,sdcor_u,sdcor,src] = plotmv(fnam,T,C,sYa,sYb,opt,vis);
 mean(src)
+%% 
 
 return

@@ -92,7 +92,7 @@ end
 
 % Calculate connectivity when Ya and Yb independent random noise (since
 % some connectivity measures, eg Dcor, not bounded by 0 or -1)
-for g=1:length(Ya)
+for g=1:min(length(Ya),20) % Ensure reasonably accurate estimate
     bYa = {}; bYb = {};
     for r=1:length(Ya{g})
         bYa{r} = Ya{g}{r}(randperm(size(Ya{g}{r},1)),:); 
