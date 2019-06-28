@@ -9,7 +9,7 @@ nTime = 200;        % number of time poinTimes
 nVoxs = [50 60];    % number of voxels in ROI1 and ROI2
 mVoxs = min(nVoxs);
 nRuns = 2;          % number of runs. MVPD requires at least 2 runs.
-Noise = 1;          % std of Noise in ROI2
+Noise = 1;          % std of Noise in ROI2. Do we want this parameter to be set here? Or do we want to change it separately for each example?
 
 % MVPD parameters
 opt.method='pca_exvar';
@@ -19,7 +19,8 @@ opt.percentage=99;
 
 fnam = 'Positively correlated voxel activities within a ROI';
 %T = rand(nVoxs);
-T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
+%T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
+T=eye(nVoxs); % we could directly use "eye", since we want the identity matrix here
 cc = 0.5;
 C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 Ya = {}; Yb = {};
@@ -33,12 +34,13 @@ vis = [1 2 1 2];
 %vis = 2;
 [fc,uvpd,mvpd,dcor_u,dcor,rc] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
 
-%% Second example: anticorrelated voxel activities within ROI1 (where MulitCon work better)
+%% Second example: anticorrelated voxel activities within ROI1 (where MultiCon work better)
 
 fnam = 'Negatively correlated voxel activities within a ROI';
 %T = rand(nVoxs);
-T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
-cc = 0.9;
+%T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
+T=eye(nVoxs); % we could directly use "eye", since we want the identity matrix here
+cc = 1; % The larger this value the larger the difference between MultiCon and UnivCon
 C = kron([cc -cc; -cc cc],ones(nVoxs(1)/2)) + (1-cc)*eye(nVoxs(1));
 Ya = {}; Yb = {};
 for g=1:nSubj
@@ -89,7 +91,8 @@ vis = 2;
 
 fnam = 'Nonlinear connectivity';
 %T = rand(nVoxs);
-T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
+%T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
+T=eye(nVoxs); % we could directly use "eye", since we want the identity matrix here
 cc = 0.5;
 C = kron([cc -cc; -cc cc],ones(nVoxs(1)/2)) + cc*eye(nVoxs(1));
 Ya = {}; Yb = {};
@@ -107,7 +110,8 @@ vis = 2;
 
 fnam = 'Structured Noise in ROI2'; 
 %T = rand(nVoxs);
-T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
+%T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
+T=eye(nVoxs); % we could directly use "eye", since we want the identity matrix here
 cc = 0.5;
 C = kron([cc -cc; -cc cc],ones(nVoxs(1)/2)) + cc*eye(nVoxs(1));
 Ya = {}; Yb = {};
