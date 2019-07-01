@@ -10,7 +10,7 @@ colormap gray
 axis square
 caxis([-1 1])
 colorbar
-title('ROI1 voxel covariance')
+title('A. ROI1 voxel covariance')
 xlabel('Voxels in ROI1')
 ylabel('Voxels in ROI1')
 set(gca,'XTick',[]); set(gca,'YTick',[])
@@ -23,7 +23,7 @@ colormap gray
 %axis square
 caxis([-1 1])
 colorbar
-title('Functional mapping')
+title('B. Functional mapping')
 xlabel('Voxels in ROI2')
 ylabel('Voxels in ROI1')
 set(gca,'XTick',[]); set(gca,'YTick',[])
@@ -44,7 +44,7 @@ if length(vis) == 4  % assume passing 2 voxel indices
     hold on
     plot(Ya{1}{1}(1:nTime,vis(2)),'k','LineWidth',2)
     axis([1 nTime minY maxY])
-    title(strcat('ROI1, corr=',num2str(C(1,2))))
+    title(strcat('C. ROI1 data, corr=',num2str(C(1,2))))
     xlabel('Time or Trial')
     ylabel('a.u.')
     legend(sprintf('voxel%d',vis(1)),sprintf('voxel%d',vis(2)),'Location','best')
@@ -56,7 +56,7 @@ if length(vis) == 4  % assume passing 2 voxel indices
     hold on
     plot(Yb{1}{1}(1:nTime,vis(4)),'k','LineWidth',2)
     axis([1 nTime minY maxY])
-    title(strcat('ROI2, corr=',num2str(C(1,2))))
+    title(strcat('D. ROI2 data, corr=',num2str(C(1,2))))
     xlabel('Time or Trial')
     ylabel('a.u.')
     legend(sprintf('voxel%d',vis(3)),sprintf('voxel%d',vis(4)),'Location','best')
@@ -64,23 +64,30 @@ if length(vis) == 4  % assume passing 2 voxel indices
 elseif vis == 2
     
     %...or all voxels from ROI1
-    maxY = max([Ya{1}{1}(:); Ya{1}{1}(:); Yb{1}{1}(:); Yb{1}{1}(:)]);
-    minY = min([Ya{1}{1}(:); Ya{1}{1}(:); Yb{1}{1}(:); Yb{1}{1}(:)]);
+%    maxY = max([Ya{1}{1}(:); Yb{1}{1}(:)]);
+%    minY = min([Ya{1}{1}(:); Yb{1}{1}(:)]);
+    maxY = max(Ya{1}{1}(:));
+    minY = min(Ya{1}{1}(:));
      
     subplot(3,2,3)
     imagesc(Ya{1}{1}(1:nTime,:)')
-    hold on
-%    axis([1 nTime minY maxY])
+    caxis([minY maxY])
+    colorbar
     xlabel('Time')
     ylabel('voxel')
+    title('C. ROI1 data')
  
     %...and all voxels from ROI2
+    maxY = max(Yb{1}{1}(:));
+    minY = min(Yb{1}{1}(:));
+
     subplot(3,2,4)
     imagesc(Yb{1}{1}(1:nTime,:)')
-    hold on
-%    axis([1 nTime minY maxY])
+    caxis([minY maxY])
+    colorbar
     xlabel('Time')
     ylabel('voxel')
+    title('D. ROI2 data')
 end
 
 % Calculate connectivity on data given
@@ -99,7 +106,7 @@ spread = std([fc uvpd mvpd dcor_u dcor rc]);
 bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
 errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
 temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
-title('Absolute Performance')
+title('E. Raw Performance')
 
 % Calculate connectivity when Ya and Yb independent random noise (since
 % some connectivity measures, eg Dcor, not bounded by 0 or -1)
@@ -119,12 +126,13 @@ else
     
     subplot(3,2,6), hold on
     meanvl = meanvl - mean([bfc buvpd bmvpd bdcor_u bdcor brc]);
-    spread = sqrt(spread.^2 + var([bfc buvpd bmvpd bdcor_u bdcor brc]));
+%    spread = sqrt(spread.^2 + var([bfc buvpd bmvpd bdcor_u bdcor brc]));
+    spread = std([fc uvpd mvpd dcor_u dcor rc] - [bfc buvpd bmvpd bdcor_u bdcor brc]); % better, since each baseline paired with real subject?
     bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
     errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
     %bar(c,meanvl./spread,'FaceColor',[0.25,0.25,0.25])
     temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
-    title('Normalised Performance')
+    title('F. Normalised Performance')
 end
 
 % subplot(3,2,6), hold on
