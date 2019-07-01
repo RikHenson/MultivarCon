@@ -90,8 +90,6 @@ for g=1:length(Ya)
     [rc(g,1),~] = data2rc(Ya{g},Yb{g},'correlation');
 end
 
-% Calculate connectivity when Ya and Yb independent random noise (since
-% some connectivity measures, eg Dcor, not bounded by 0 or -1)
 for g=1:length(Ya)
     bYa = {}; bYb = {};
     for r=1:length(Ya{g})
