@@ -56,7 +56,7 @@ vis = 2;
 fnam = 'Negative correlations induced by the functional mapping';
 %T = rand(nVoxs)-0.5;
 T = zeros(nVoxs); for j=1:mVoxs/2; T(j,j)=1; T(j+mVoxs/2,j+mVoxs/2)=-1; end
-cc = 0.5;
+cc = 0;
 C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 Ya = {}; Yb = {};
 for g=1:nSubj
@@ -122,7 +122,6 @@ vis = 2;
 [fc,uvpd,mvpd,dcor_u,dcor,rc] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
 
 %% Seventh example: averaging timepoints (trials) with same stimulus improves RCA
-%% 
 
 fnam = 'Negative correlations induced by the functional mapping; averaging across stimuli of same type';
 %T = rand(nVoxs)-0.5;
