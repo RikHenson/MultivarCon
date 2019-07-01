@@ -90,17 +90,6 @@ for g=1:length(Ya)
     [rc(g,1),~] = data2rc(Ya{g},Yb{g},'correlation');
 end
 
-for g=1:length(Ya)
-    bYa = {}; bYb = {};
-    for r=1:length(Ya{g})
-        bYa{r} = Ya{g}{r}(randperm(size(Ya{g}{r},1)),:); 
-        bYb{r} = Yb{g}{r}(randperm(size(Yb{g}{r},1)),:); 
-    end
-    [bmvpd(g,1),buvpd(g,1),bfc(g,1)] = data2mvpd(bYa,bYb,opt); 
-    [bdcor(g,1),bdcor_u(g,1)] = data2dCor(bYa,bYb);
-    [brc(g,1),~] = data2rc(bYa,bYb,'correlation');
-end
-
 % plot the absolute performance
 subplot(3,2,5), hold on
 c = categorical({'1 Pearson','2 UVPD','3 MVPD','4 UVdCor','5 dCor','6 RCA'});
@@ -112,15 +101,31 @@ errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
 temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
 title('Absolute Performance')
 
-subplot(3,2,6), hold on
-meanvl = meanvl - mean([bfc buvpd bmvpd bdcor_u bdcor brc]);
-spread = sqrt(spread.^2 + var([fc uvpd mvpd dcor_u dcor rc]));
-bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
-errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
-%bar(c,meanvl./spread,'FaceColor',[0.25,0.25,0.25])
-temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
-title('Normalised Performance')
-
+% Calculate connectivity when Ya and Yb independent random noise (since
+% some connectivity measures, eg Dcor, not bounded by 0 or -1)
+if length(Ya)<20
+    warning('Insufficient subjects (<20) to estimate baseline error')
+else    
+    for g=1:length(Ya) % Ensure reasonably accurate estimate
+        bYa = {}; bYb = {};
+        for r=1:length(Ya{g})
+            bYa{r} = Ya{g}{r}(randperm(size(Ya{g}{r},1)),:);
+            bYb{r} = Yb{g}{r}(randperm(size(Yb{g}{r},1)),:);
+        end
+        [bmvpd(g,1),buvpd(g,1),bfc(g,1)] = data2mvpd(bYa,bYb,opt);
+        [bdcor(g,1),bdcor_u(g,1)] = data2dCor(bYa,bYb);
+        [brc(g,1),~] = data2rc(bYa,bYb,'correlation');
+    end
+    
+    subplot(3,2,6), hold on
+    meanvl = meanvl - mean([bfc buvpd bmvpd bdcor_u bdcor brc]);
+    spread = sqrt(spread.^2 + var([bfc buvpd bmvpd bdcor_u bdcor brc]));
+    bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
+    errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
+    %bar(c,meanvl./spread,'FaceColor',[0.25,0.25,0.25])
+    temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
+    title('Normalised Performance')
+end
 
 % subplot(3,2,6), hold on
 % meanvl = mean([bfc buvpd bmvpd bdcor_u bdcor brc]);
