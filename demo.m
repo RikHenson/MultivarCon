@@ -31,7 +31,9 @@ for g=1:nSubj
 end
 vis = [1 2 1 2];
 %vis = 2;
-[fc,uvpd,mvpd,dcor_u,dcor,rc] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
+[MVconn,MVconn_null] = computeMVconn(Ya,Yb,opt);
+plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
+
 saveas(gcf,'Graphics/mvcon_example1.png','png')
 
 %% Second example: anticorrelated voxel activities within ROI1 (where MulitCon work better)
@@ -50,7 +52,8 @@ for g=1:nSubj
 end
 vis = 2;
 %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
-[fc,uvpd,mvpd,dcor_u,dcor,rc] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
+[MVconn,MVconn_null] = computeMVconn(Ya,Yb,opt);
+plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
 saveas(gcf,'Graphics/mvcon_example2.png','png')
 
 %% Third example: anticorrelation in ROI2 induced by the functional mapping (where MulitCon work better)
@@ -68,7 +71,8 @@ for g=1:nSubj
     end
 end
 vis = 2;
-[fc,uvpd,mvpd,dcor_u,dcor,rc] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
+[MVconn,MVconn_null] = computeMVconn(Ya,Yb,opt);
+plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
 saveas(gcf,'Graphics/mvcon_example3.png','png')
 
 %% Fourth example: run-dependent linear mapping (where MVPD fails)
@@ -86,7 +90,8 @@ for g=1:nSubj
     end
 end
 vis = 2;
-[fc,uvpd,mvpd,dcor_u,dcor,rc] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
+[MVconn,MVconn_null] = computeMVconn(Ya,Yb,opt);
+plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
 saveas(gcf,'Graphics/mvcon_example4.png','png')
 
 %% Fifth example: the functional mapping is nonlinear (where Dcor works best)
@@ -107,7 +112,8 @@ for g=1:nSubj
 end
 %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
 vis = 2;
-[fc,uvpd,mvpd,dcor_u,dcor,rc] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
+[MVconn,MVconn_null] = computeMVconn(Ya,Yb,opt);
+plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
 saveas(gcf,'Graphics/mvcon_example5.png','png')
 
 %% Sixth example: the presence of structured noise in ROI2 (where PCA works best)
@@ -128,7 +134,8 @@ for g=1:nSubj
     end
 end
 vis = 2;
-[fc,uvpd,mvpd,dcor_u,dcor,rc] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
+[MVconn,MVconn_null] = computeMVconn(Ya,Yb,opt);
+plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
 saveas(gcf,'Graphics/mvcon_example6.png','png')
 
 %% Seventh example: averaging timepoints (trials) with same stimulus improves RCA
@@ -145,36 +152,38 @@ cc = 0;
 C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 
 Ya = {}; Yb = {};
-for g=1:nSubj
+for s=1:nSubj
     for r=1:nRuns
-        Ya{g}{r} = mvnrnd(zeros(nStim,nVoxs(1)),C);
-        Ya{g}{r} = repmat(Ya{g}{r},nRep,1);  % Repeat same pattern 
-        Yb{g}{r} = Ya{g}{r}*T + Noise*randn(nTime,nVoxs(2));
+        Ya{s}{r} = mvnrnd(zeros(nStim,nVoxs(1)),C);
+        Ya{s}{r} = repmat(Ya{s}{r},nRep,1);  % Repeat same pattern 
+        Yb{s}{r} = Ya{s}{r}*T + Noise*randn(nTime,nVoxs(2));
 %        Ya{g}{r} = Ya{g}{r} + Noise*randn(nTime,nVoxs(1));  % independent noise
     end
 end
 
 vis = 2;
 %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
-[fc,uvpd,mvpd,dcor_u,dcor,rc] = plotmv(fnam,T,C,Ya,Yb,opt,vis);
+[MVconn,MVconn_null] = computeMVconn(Ya,Yb,opt);
+plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
 saveas(gcf,'Graphics/mvcon_example7a.png','png')
-mean(rc)
+mean(MVconn.RCA)
 
 sYa = {}; sYb = {};
-for g=1:nSubj
+for s=1:nSubj
     for r=1:nRuns
-        for s = 1:nStim
-            sYa{g}{r}(s,:) = mean(Ya{g}{r}(find(stimuli==s),:));
-            sYb{g}{r}(s,:) = mean(Yb{g}{r}(find(stimuli==s),:));
+        for stim = 1:nStim
+            sYa{s}{r}(stim,:) = mean(Ya{s}{r}(find(stimuli==stim),:));
+            sYb{s}{r}(stim,:) = mean(Yb{s}{r}(find(stimuli==stim),:));
         end
     end
 end
 
 vis = 2;
 %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
-[sfc,suvpd,smvpd,sdcor_u,sdcor,src] = plotmv(fnam,T,C,sYa,sYb,opt,vis);
+[sMVconn,sMVconn_null] = computeMVconn(sYa,sYb,opt);
+plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
 saveas(gcf,'Graphics/mvcon_example7b.png','png')
-mean(src)
+mean(sMVconn.RCA)
 
 return
 
