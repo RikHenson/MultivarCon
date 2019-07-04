@@ -14,6 +14,7 @@ Noise = 1;          % std of Noise in ROI2
 % MVPD parameters
 opt.method='pca_exvar';
 opt.percentage=99;
+opt.number=1;
 
 %% First example: positively correlated voxel activities within ROI1 (where both UniConn and MultiConn work)
 
@@ -184,6 +185,72 @@ vis = 2;
 plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
 saveas(gcf,'Graphics/mvcon_example7b.png','png')
 mean(sMVconn.RCA)
+
+
+%% Eighth example: closed-loop (where lagged MultiCon work better)
+
+fnam = 'Closed-loop between subpopulations';
+ % functional mapping between the two regions
+
+% Parameter settings
+nTime = 15360;      % number of time points, e.g. 15360 is equivalent to 60 seconds 
+                    % acquisition if the resolution is 256 Hz
+nVoxs = [6 3];      % number of voxels in ROI1 and ROI2
+
+% MIM parameters
+opt.segleng=256;    % length (in bins) of the segment used for the cross-spectrum computation,
+                    % e.g. 256 is equivalent to 1 second segment with a resolution of 256 Hz
+opt.freqbins=31:71; % low gamma band, i.e. from 30 Hz to 70 Hz
+
+delaybin= 10;     % delay in bins of the interaction between the regions,
+                  % e.g. if the resolution is 256 Hz and the delaybin is 10, 
+                  % the actual delay between a and b is delaybin/(256 Hz)= 40ms 
+Noise=0.5;
+                  
+% correlated (mixed) noise
+Mixnoise=randn(nTime,sum(nVoxs));
+Mixnoisea=Mixnoise*randn(sum(nVoxs),nVoxs(1));
+Mixnoiseb=Mixnoise*randn(sum(nVoxs),nVoxs(2));
+
+Tab=randn(nVoxs);
+Tba=randn(nVoxs(2:-1:1));
+cc = 0.5;
+Ca = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc);
+Cb = ones(nVoxs(2))*cc + eye(nVoxs(2))*(1-cc);
+
+
+Ya = {}; Yb = {};
+for g=1:nSubj
+    for r=1:nRuns
+        
+        % simulation of lagged multivariate interaction from a population
+        % in ROIa to a population in ROIb
+        Ya{g}{r}=mvnrnd(zeros(nTime+delaybin,nVoxs(1)),Ca);
+        %Yb{g}{r}=(Ya{g}{r}(delaybin+1:end,:)*Tab)/norm(Ya{g}{r}(delaybin+1:end,:)*Tab,'fro')+Noise*Mixnoiseb/norm(Mixnoiseb,'fro');
+        %Ya{g}{r}=Ya{g}{r}(1:nTime,:)/norm(Ya{g}{r}(1:nTime,:),'fro')+Noise*Mixnoisea/norm(Mixnoisea,'fro');
+        Yb{g}{r}=(Ya{g}{r}(delaybin+1:end,:)*Tab)+Noise*Mixnoiseb;
+        Ya{g}{r}=Ya{g}{r}(1:nTime,:)+Noise*Mixnoisea;
+        Za{g}{r}=Ya{g}{r};
+        Zb{g}{r}=Yb{g}{r};
+
+        % simulation of lagged multivariate interaction from a population
+        % in ROIb to a population in ROIa
+        Yb{g}{r}=mvnrnd(zeros(nTime+delaybin,nVoxs(2)),Cb);
+        %Ya{g}{r}=(Yb{g}{r}(delaybin+1:end,:)*Tba)/norm(Yb{g}{r}(delaybin+1:end,:)*Tba,'fro')+Noise*Mixnoisea/norm(Mixnoisea,'fro');
+        %Yb{g}{r}=Yb{g}{r}(1:nTime,:)/norm(Yb{g}{r}(1:nTime,:),'fro')+Noise*Mixnoiseb/norm(Mixnoiseb,'fro');
+        Ya{g}{r}=(Yb{g}{r}(delaybin+1:end,:)*Tba)+Noise*Mixnoisea;
+        Yb{g}{r}=Yb{g}{r}(1:nTime,:)+Noise*Mixnoiseb;
+        Za{g}{r}=[Za{g}{r}, Ya{g}{r}];
+        Zb{g}{r}=[Zb{g}{r}, Yb{g}{r}];
+
+    end
+end
+
+vis = [1 2 1 2];
+%vis = 2;
+[MVconn,MVconn_null] = computeMVconn(Za,Zb,opt);
+plotmv(fnam,Tab,Ca,Za,Zb,MVconn,MVconn_null,vis)
+saveas(gcf,'Graphics/mvcon_example8.png','png')
 
 return
 
