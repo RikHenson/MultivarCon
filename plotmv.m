@@ -1,6 +1,5 @@
 function [] = plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
 % visualisation function for the results of computeMVconn.m
-
 figure('name',fnam,'Color','w','Position',[1 1 2*560 1.5*480]);
 
 % plot the ROI covariance
@@ -30,7 +29,6 @@ ylabel('Voxels in ROI1')
 set(gca,'XTick',[]); set(gca,'YTick',[])
 
 nTime = min(size(Ya{1}{1},1),50);
-
 %plot the timeseries for first nTime timepoints in run 1... 
 if length(vis) == 4  % assume passing 2 voxel indices
 
@@ -93,10 +91,16 @@ end
 
 % plot the absolute performance
 subplot(3,2,5), hold on
-c = categorical({'1 Pearson','2 UVPD','3 MVPD','4 UVdCor','5 dCor','6 RCA'});
-meanvl = mean([MVconn.FC MVconn.UVPD MVconn.MVPD MVconn.dCor_univar MVconn.dCor MVconn.RCA]);
-spread = std([MVconn.FC MVconn.UVPD MVconn.MVPD MVconn.dCor_univar MVconn.dCor MVconn.RCA]);
-% spread = iqr([MVconn.fc MVconn.uvpd MVconn.mvpd MVconn.dcor_u MVconn.dcor MVconn.rc]);
+if ~isfield(MVconn,'MIM')
+    c = categorical({'1 Pearson','2 Pearson-PCA','3 MVPD','4 UVdCor','5 dCor','6 RCA'});
+    meanvl = mean([MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.dCor_univar MVconn.dCor MVconn.RCA]);
+    spread = std([MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.dCor_univar MVconn.dCor MVconn.RCA]);
+    % spread = iqr([MVconn.fc MVconn.uvpd MVconn.mvpd MVconn.dcor_u MVconn.dcor MVconn.rc]);
+else
+    c = categorical({'1 ImCoh','2 ImCoh-PCA','3 MIM'});
+    meanvl = mean([MVconn.ImCoh MVconn.ImCohPC MVconn.MIM]);
+    spread = std([MVconn.ImCoh MVconn.ImCohPC MVconn.MIM]);
+end
 bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
 errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
 temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
@@ -107,16 +111,24 @@ title('E. Raw Performance')
 if length(Ya)<20
     warning('Insufficient subjects (<20) to estimate baseline error')
 else    
-    subplot(3,2,6), hold on
-    meanvl = meanvl - mean([MVconn_null.FC MVconn_null.UVPD MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]);
+subplot(3,2,6), hold on
+if ~isfield(MVconn,'MIM')
+    meanvl = meanvl - mean([MVconn_null.FC MVconn_null.FCPC MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]);
 %    spread = sqrt(spread.^2 + var([MVconn_null.FC MVconn_null.UVPD MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]));
-    spread = std([MVconn.FC MVconn.UVPD MVconn.MVPD MVconn.dCor_univar MVconn.dCor MVconn.RCA] - ...
-        [MVconn_null.FC MVconn_null.UVPD MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]); % better, since each baseline paired with real subject?
-    bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
-    errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
-    %bar(c,meanvl./spread,'FaceColor',[0.25,0.25,0.25])
-    temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
-    title('F. Normalised Performance')
+    spread = std([MVconn.FC MVconn_null.FCPC MVconn.MVPD MVconn.dCor_univar MVconn.dCor MVconn.RCA] - ...
+    [MVconn_null.FC MVconn_null.FCPC MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]); % better, since each baseline paired with real subject?
+else
+    meanvl = meanvl - mean([MVconn_null.ImCoh MVconn_null.ImCohPC MVconn_null.MIM]);
+%       spread = sqrt(spread.^2 + var([MVconn_null.FC MVconn_null.UVPD MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]));
+    spread = std([MVconn.ImCoh MVconn_null.ImCohPC MVconn.MIM] - ...
+    [MVconn_null.ImCoh MVconn_null.ImCohPC MVconn_null.MIM]); % better, since each baseline paired with real subject?
+
+end
+bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
+errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
+%bar(c,meanvl./spread,'FaceColor',[0.25,0.25,0.25])
+temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
+title('F. Normalised Performance')
 end
 
 % subplot(3,2,6), hold on
