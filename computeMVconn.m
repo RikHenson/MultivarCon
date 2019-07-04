@@ -7,9 +7,13 @@ end
 
 % Calculate connectivity on data given
 for s=1:length(Ya)
-    [mvpd(s,1),uvpd(s,1),fc(s,1)] = data2mvpd(Ya{s},Yb{s},opt); 
-    [dcor(s,1),dcor_u(s,1)] = data2dCor(Ya{s},Yb{s});
-    [rc(s,1),~] = data2rc(Ya{s},Yb{s},'correlation');
+    if ~isfield(opt,'segleng') 
+        [mvpd(s,1),fc(s,1),fc_pc(s,1)] = data2mvpd(Ya{s},Yb{s},opt); 
+        [dcor(s,1),dcor_u(s,1)] = data2dCor(Ya{s},Yb{s});
+        [rc(s,1),~] = data2rc(Ya{s},Yb{s},'correlation');
+    else
+       [mim(s,1),imcoh(s,1),imcoh_pc(s,1)] = data2mim(Ya{s},Yb{s},opt);
+    end
 end
 
 % Calculate connectivity when Ya and Yb independent random noise (since
@@ -24,22 +28,44 @@ else
                 bYa{r} = Ya{s}{r}(randperm(size(Ya{s}{r},1)),:);
                 bYb{r} = Yb{s}{r}(randperm(size(Yb{s}{r},1)),:);
             end
-            [bmvpd(s,iter),buvpd(s,iter),bfc(s,iter)] = data2mvpd(bYa,bYb,opt);
-            [bdcor(s,iter),bdcor_u(s,iter)] = data2dCor(bYa,bYb);
-            [brc(s,iter),~] = data2rc(bYa,bYb,'correlation');
+            if ~isfield(opt,'segleng') 
+                [bmvpd(s,iter),bfc(s,iter),bfc_pc(s,iter)] = data2mvpd(bYa,bYb,opt);
+                [bdcor(s,iter),bdcor_u(s,iter)] = data2dCor(bYa,bYb);
+                [brc(s,iter),~] = data2rc(bYa,bYb,'correlation');
+            else
+               [bmim(s,iter),bimcoh(s,iter),bimcoh_pc(s,iter)] = data2mim(bYa,bYb,opt);
+            end
         end
     end
 end
 
+if ~isfield(opt,'segleng') 
+    MVconn.MVPD = mvpd;
+    MVconn.FC = fc;
+    MVconn.FCPC = fc_pc;
+    MVconn.dCor = dcor;
+    MVconn.dCor_univar = dcor_u;
+    MVconn.RCA = rc;
+else
+    MVconn.MIM = mim;
+    MVconn.ImCoh = imcoh;
+    MVconn.ImCohPC = imcoh_pc;
+end
 
-MVconn.FC = fc;MVconn.MVPD = mvpd;
-MVconn.UVPD = uvpd;
-MVconn.dCor = dcor;MVconn.dCor_univar = dcor_u;
-MVconn.RCA = rc;
-MVconn_null.FC = bfc;MVconn_null.MVPD = bmvpd;
-MVconn_null.UVPD = buvpd;
-MVconn_null.dCor = bdcor;MVconn_null.dCor_univar = bdcor_u;
-MVconn_null.RCA = brc;
+if ~isfield(opt,'segleng') 
+    MVconn_null.MVPD = bmvpd;
+    MVconn_null.FC = bfc;
+    MVconn_null.FCPC = bfc_pc;
+    MVconn_null.dCor = bdcor;MVconn_null.dCor_univar = bdcor_u;
+    MVconn_null.RCA = brc;
+else
+    MVconn_null.MIM = bmim;
+    MVconn_null.ImCoh = bimcoh;
+    MVconn_null.ImCohPC = bimcoh_pc;
+end
+
+return
+
 
 
 
