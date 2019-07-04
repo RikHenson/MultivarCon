@@ -1,4 +1,4 @@
-function [mvpd,uvpd,fc]=data2mvpd(Ya,Yb,options);
+function [mvpd,fc,fc_pc]=data2mvpd(Ya,Yb,options);
 % calculates the MultiVariate Pattern Dependence (MVPD) between two
 % multivariate time series (Anzellotti et al. 2017, Plos Comput Biol).
 %
@@ -13,7 +13,7 @@ function [mvpd,uvpd,fc]=data2mvpd(Ya,Yb,options);
 % uvpd:       UVPD value.
 % fc:         Pearson correlation coefficient.
 % Alessio Basti 
-% version: 03/05/2019
+% version: 04/07/2019
 
 for irun=1:length(Ya)
     %Ya_zs{irun} = zscore(Ya{irun},0,2);
@@ -25,6 +25,9 @@ for irun=1:length(Ya)
     ts_b{irun} = mean(Yb{irun},2);
     % compute the pearson correlation
     fc_app(irun) = corr(ts_a{irun},ts_b{irun});
+    [PC1_a{irun}]=dimreduction(Ya_zs{irun},'pca_ndir',options);
+    [PC1_b{irun}]=dimreduction(Yb_zs{irun},'pca_ndir',options);
+    fc_PCs_app(irun) = corr(PC1_a{irun},PC1_b{irun});
 end
 
 method=zeros(2,1);
@@ -71,6 +74,7 @@ end
 mvpd=method(1)/length(Ya_app);
 uvpd=method(2)/length(Ya_app);
 fc=mean(fc_app);
+fc_pc=mean(fc_PCs_app);
 
 
 end
