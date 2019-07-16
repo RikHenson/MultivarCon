@@ -15,6 +15,7 @@ Noise = 1;          % std of Noise in ROI2
 opt.method='pca_exvar';
 opt.percentage=99;
 opt.number=1;
+opt.regularisation=10.^(-1:0.1:3); % regularisation parameter for ridge regression.
 
 %% First example: positively correlated voxel activities within ROI1 (where both UniConn and MultiConn work)
 
