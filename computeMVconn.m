@@ -8,7 +8,7 @@ end
 % Calculate connectivity on data given
 for s=1:length(Ya)
     if ~isfield(opt,'segleng') 
-        [mvpd(s,1),fc(s,1),fc_pc(s,1)] = data2mvpd(Ya{s},Yb{s},opt); 
+        [mvpd(s,1),gof(s,1),fc(s,1),fc_pc(s,1)] = data2mvpd_gof_fc(Ya{s},Yb{s},opt); 
         [dcor(s,1),dcor_u(s,1)] = data2dCor(Ya{s},Yb{s});
         [rc(s,1),~] = data2rc(Ya{s},Yb{s},'correlation');
     else
@@ -29,7 +29,7 @@ else
                 bYb{r} = Yb{s}{r}(randperm(size(Yb{s}{r},1)),:);
             end
             if ~isfield(opt,'segleng') 
-                [bmvpd(s,iter),bfc(s,iter),bfc_pc(s,iter)] = data2mvpd(bYa,bYb,opt);
+                [bmvpd(s,iter),bgof(s,1),bfc(s,iter),bfc_pc(s,iter)] = data2mvpd_gof_fc(bYa,bYb,opt);
                 [bdcor(s,iter),bdcor_u(s,iter)] = data2dCor(bYa,bYb);
                 [brc(s,iter),~] = data2rc(bYa,bYb,'correlation');
             else
@@ -39,12 +39,12 @@ else
     end
 end
 
-if ~isfield(opt,'segleng') 
-    MVconn.MVPD = mvpd;
+if ~isfield(opt,'segleng')
     MVconn.FC = fc;
     MVconn.FCPC = fc_pc;
+    MVconn.MVPD = mvpd;
+    MVconn.GOF = gof;
     MVconn.dCor = dcor;
-    MVconn.dCor_univar = dcor_u;
     MVconn.RCA = rc;
 else
     MVconn.MIM = mim;
@@ -52,11 +52,12 @@ else
     MVconn.ImCohPC = imcoh_pc;
 end
 
-if ~isfield(opt,'segleng') 
-    MVconn_null.MVPD = bmvpd;
+if ~isfield(opt,'segleng')
     MVconn_null.FC = bfc;
     MVconn_null.FCPC = bfc_pc;
-    MVconn_null.dCor = bdcor;MVconn_null.dCor_univar = bdcor_u;
+    MVconn_null.MVPD = bmvpd;
+    MVconn_null.GOF = bgof;
+    MVconn_null.dCor = bdcor;
     MVconn_null.RCA = brc;
 else
     MVconn_null.MIM = bmim;
