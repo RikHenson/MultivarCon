@@ -90,21 +90,21 @@ elseif vis == 2
 end
 
 % plot the absolute performance
-subplot(3,2,5), hold on
+%subplot(3,2,5), hold on
 if ~isfield(MVconn,'MIM')
-    c = categorical({'1 Pearson','2 Pearson-PCA','3 MVPD','4 UVdCor','5 dCor','6 RCA'});
-    meanvl = mean([MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.dCor_univar MVconn.dCor MVconn.RCA]);
-    spread = std([MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.dCor_univar MVconn.dCor MVconn.RCA]);
+    c = categorical({'1 Pearson','2 Pearson-PCA','3 MVPD','4 GOF','5 dCor','6 RCA'});
+    meanvl = mean([MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.GOF MVconn.dCor MVconn.RCA]);
+    spread = std([MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.GOF MVconn.dCor MVconn.RCA]);
     % spread = iqr([MVconn.fc MVconn.uvpd MVconn.mvpd MVconn.dcor_u MVconn.dcor MVconn.rc]);
 else
     c = categorical({'1 ImCoh','2 ImCoh-PCA','3 MIM'});
     meanvl = mean([MVconn.ImCoh MVconn.ImCohPC MVconn.MIM]);
     spread = std([MVconn.ImCoh MVconn.ImCohPC MVconn.MIM]);
 end
-bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
-errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
-temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
-title('E. Raw Performance')
+%bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
+%errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
+%temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
+%title('E. Raw Performance')
 
 % Calculate connectivity when Ya and Yb independent random noise (since
 % some connectivity measures, eg Dcor, not bounded by 0 or -1)
@@ -113,10 +113,10 @@ if length(Ya)<20
 else    
 subplot(3,2,6), hold on
 if ~isfield(MVconn,'MIM')
-    meanvl = meanvl - mean([MVconn_null.FC MVconn_null.FCPC MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]);
+    meanvl = meanvl - mean([MVconn_null.FC MVconn_null.FCPC MVconn_null.MVPD MVconn_null.GOF MVconn_null.dCor MVconn_null.RCA]);
 %    spread = sqrt(spread.^2 + var([MVconn_null.FC MVconn_null.UVPD MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]));
-    spread = std([MVconn.FC MVconn_null.FCPC MVconn.MVPD MVconn.dCor_univar MVconn.dCor MVconn.RCA] - ...
-    [MVconn_null.FC MVconn_null.FCPC MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]); % better, since each baseline paired with real subject?
+    spread = std([MVconn.FC MVconn_null.FCPC MVconn.MVPD MVconn.GOF MVconn.dCor MVconn.RCA] - ...
+    [MVconn_null.FC MVconn_null.FCPC MVconn_null.MVPD MVconn_null.GOF MVconn_null.dCor MVconn_null.RCA]); % better, since each baseline paired with real subject?
 else
     meanvl = meanvl - mean([MVconn_null.ImCoh MVconn_null.ImCohPC MVconn_null.MIM]);
 %       spread = sqrt(spread.^2 + var([MVconn_null.FC MVconn_null.UVPD MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]));
@@ -138,8 +138,6 @@ end
 % errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
 % temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
 % title('Normalised Performance')
-
-
 
 
 
