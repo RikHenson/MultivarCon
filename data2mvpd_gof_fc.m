@@ -14,7 +14,7 @@ function [mvpd,gof,fc,fc_pc]=data2mvpd_gof_fc(Ya,Yb,options);
 %             dimensionality reduction approach or the number ofICs to be considered.            
 % Output: 
 % mvpd:       MVPD value.
-% gof:        GOF value.
+% gof:        GOF value (correlation between estimated and actual RDMs)
 % fc:         Pearson correlation coefficient between average time series.
 % fc:         Pearson correlation coefficient between first two PCs.
 % Alessio Basti 
@@ -46,7 +46,7 @@ for jmet=1:1
     end
     for irun=1:length(Ya_app)
 
-        %let us divide the training set from the testing set
+        % let us divide the training set from the testing set
         Yatrain=Ya_app;
         Ybtrain=Yb_app;
         Yatrain{irun}=[];
@@ -61,8 +61,8 @@ for jmet=1:1
         [Yatrain_red,Va,SVa]=dimreduction(Yatrain,options.method,options);
         [Ybtrain_red,Vb,SVb]=dimreduction(Ybtrain,options.method,options);
 
-        %linear model estimate (ridge regression) and gof
-        [B,~]=ridgeregmethod(Yatrain_red,Ybtrain_red,options.regularisation);
+        % linear model estimate (least-squares)
+        [B,~]=ridgeregmethod(Yatrain_red,Ybtrain_red,0);
         Yatest_red=(Yatest-repmat(mean(Yatest),length(Yatest(:,1)),1))*Va;
         Ybtest_red=(Ybtest-repmat(mean(Ybtest),length(Ybtest(:,1)),1))*Vb;
         
@@ -72,7 +72,17 @@ for jmet=1:1
             M=corrcoef(Ybtest_red(:,icomp),Ybtest_for_red(:,icomp));
             method(jmet)=method(jmet)+(SVb(icomp)/sum(SVb))*M(1,2);
         end
-        [B,gof(irun,jmet)]=ridgeregmethod(Ya_zs{irun},Yb_zs{irun},options.regularisation);
+        
+        % linear model estimate (ridge regression)
+        zYa{irun}=zscore(Ya{irun},0,2);
+        zYb{irun}=zscore(Yb{irun},0,2);
+        [B,~]=ridgeregmethod(zYa{irun},zYb{irun},options.regularisation);
+        zYb_for{irun}=zYa{irun}*B';
+        RDMb=zYb{irun}*zYb{irun}';
+        RDMb_for=zYb_for{irun}*zYb_for{irun}';
+        
+        % correlation between the estimated and the actual RDM
+        gof(irun,jmet)=corr(RDMb(find(triu(RDMb,1))),RDMb_for(find(triu(RDMb_for,1))));
     end
 end
 
