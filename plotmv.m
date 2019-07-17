@@ -90,7 +90,7 @@ elseif vis == 2
 end
 
 % plot the absolute performance
-%subplot(3,2,5), hold on
+subplot(3,2,5), hold on
 if ~isfield(MVconn,'MIM')
     c = categorical({'1 Pearson','2 Pearson-PCA','3 MVPD','4 GOF','5 dCor','6 RCA'});
     meanvl = mean([MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.GOF MVconn.dCor MVconn.RCA]);
@@ -101,10 +101,10 @@ else
     meanvl = mean([MVconn.ImCoh MVconn.ImCohPC MVconn.MIM]);
     spread = std([MVconn.ImCoh MVconn.ImCohPC MVconn.MIM]);
 end
-%bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
-%errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
-%temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
-%title('E. Raw Performance')
+bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
+errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
+temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
+title('E. Raw Performance')
 
 % Calculate connectivity when Ya and Yb independent random noise (since
 % some connectivity measures, eg Dcor, not bounded by 0 or -1)
