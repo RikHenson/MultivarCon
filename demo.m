@@ -77,26 +77,27 @@ vis = 2;
 plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
 saveas(gcf,'Graphics/mvcon_example3.png','png')
 
-%% Fourth example: run-dependent linear mapping (where MVPD fails)
+%% Fourth example: run-dependent linear mapping (within-run measures work)
 
 fnam = 'Run-dependent linear connectivity';
 cc = 0.5;
 C = kron([cc -cc; -cc cc],ones(nVoxs(1)/2)) + cc*eye(nVoxs(1));
-%C = eye(nVoxs);
+C = cov(rand(nVoxs(1))); %this example doesn't require a particular cov
+% structure in either ROI.
 Ya = {}; Yb = {};
-for g=1:nSubj
+for s=1:nSubj
     for r=1:nRuns
-       Ya{g}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-       T = rand(nVoxs)-0.5;
-       Yb{g}{r} = Ya{g}{r}*T + Noise*randn(nTime,nVoxs(2));
+       Ya{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
+       T = randn(nVoxs);% changed this from rand(nVoxs)-.5 
+       Yb{s}{r} = Ya{s}{r}*T + Noise*randn(nTime,nVoxs(2));
     end
 end
 vis = 2;
 [MVconn,MVconn_null] = computeMVconn(Ya,Yb,opt);
 plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
-saveas(gcf,'Graphics/mvcon_example4.png','png')
+saveas(gcf,fullfile('Graphics','mvcon_example4.png'),'png')
 
-%% Fifth example: the functional mapping is nonlinear (where Dcor works best)
+%% Fifth example: the functional mapping is nonlinear (dCor works best)
 
 fnam = 'Nonlinear connectivity';
 %T = rand(nVoxs);
@@ -106,39 +107,44 @@ C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 %C = kron([cc -cc; -cc cc],ones(nVoxs(1)/2)) + cc*eye(nVoxs(1));
 Ya = {}; Yb = {};
 Noise = 0.5;
-for g=1:nSubj
+for s=1:nSubj
     for r=1:nRuns
-       Ya{g}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-       Yb{g}{r} = abs(Ya{g}{r}*T) + Noise*randn(nTime,nVoxs(2));
+       Ya{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
+       Yb{s}{r} = abs(Ya{s}{r}*T) + Noise*randn(nTime,nVoxs(2));
+%        Yb{s}{r} = (Ya{s}{r}*T).^2 + Noise*randn(nTime,nVoxs(2));% also a good example
     end
 end
 %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
 vis = 2;
 [MVconn,MVconn_null] = computeMVconn(Ya,Yb,opt);
 plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
-saveas(gcf,'Graphics/mvcon_example5.png','png')
+saveas(gcf,fullfile('Graphics','mvcon_example5.png'),'png')
 
-%% Sixth example: the presence of structured noise in ROI2 (where PCA works best)
+%% Sixth example: the presence of structured noise in ROI2 (where RCA works best)
+% do we have to zscore the data for the GOF?
 
 fnam = 'Structured Noise in ROI2'; 
 %T = rand(nVoxs);
 T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
+% T = randn(nVoxs);
 cc = 0.5;
 %C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 C = kron([cc -cc; -cc cc],ones(nVoxs(1)/2)) + cc*eye(nVoxs(1));
+% C = cov(rand(nVoxs(1)));% this can also be general. again we don't need a 
+% specfic C for this
 Ya = {}; Yb = {};
 Noise = 1;
-for g=1:nSubj
+for s=1:nSubj
     for r=1:nRuns
-        Ya{g}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-        Yb{g}{r} = Ya{g}{r}*T + Noise*randn(nTime,nVoxs(2));
-        Yb{g}{r} = Yb{g}{r}   + 5*Noise*repmat(randn(nTime,1),1,nVoxs(2));
+        Ya{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
+        Yb{s}{r} = Ya{s}{r}*T + Noise*randn(nTime,nVoxs(2));
+        Yb{s}{r} = Yb{s}{r}   + 5*Noise*repmat(randn(nTime,1),1,nVoxs(2));
     end
 end
 vis = 2;
 [MVconn,MVconn_null] = computeMVconn(Ya,Yb,opt);
 plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
-saveas(gcf,'Graphics/mvcon_example6.png','png')
+saveas(gcf,fullfile('Graphics','mvcon_example6.png'),'png')
 
 %% Seventh example: averaging timepoints (trials) with same stimulus improves RCA
 
@@ -166,9 +172,9 @@ end
 vis = 2;
 %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
 [MVconn,MVconn_null] = computeMVconn(Ya,Yb,opt);
-plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
-saveas(gcf,'Graphics/mvcon_example7a.png','png')
-mean(MVconn.RCA)
+% plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
+% saveas(gcf,'Graphics/mvcon_example7a.png','png')
+rc_orig = mean(MVconn.RCA)-mean(MVconn_null.RCA);
 
 sYa = {}; sYb = {};
 for s=1:nSubj
@@ -183,9 +189,12 @@ end
 vis = 2;
 %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
 [sMVconn,sMVconn_null] = computeMVconn(sYa,sYb,opt);
-plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
-saveas(gcf,'Graphics/mvcon_example7b.png','png')
-mean(sMVconn.RCA)
+% plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
+% saveas(gcf,'Graphics/mvcon_example7b.png','png')
+rc_pooled = mean(sMVconn.RCA)-mean(sMVconn_null.RCA);
+fprintf('RC from the original trial x trial RDMs: \t: %.2f\n',rc_orig)
+fprintf('RC from the pooled data i.e. stim x stim RDMs: \t: %.2f\n',rc_pooled)
+
 
 
 %% Eighth example: closed-loop (where lagged MultiCon work better)

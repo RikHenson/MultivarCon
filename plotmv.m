@@ -113,10 +113,10 @@ if length(Ya)<20
 else    
 subplot(3,2,6), hold on
 if ~isfield(MVconn,'MIM')
-    meanvl = meanvl - mean([MVconn_null.FC MVconn_null.FCPC MVconn_null.MVPD MVconn_null.GOF MVconn_null.dCor MVconn_null.RCA]);
+    meanvl = meanvl - [mean2(MVconn_null.FC) mean2(MVconn_null.FCPC) mean2(MVconn_null.MVPD) mean2(MVconn_null.GOF) mean2(MVconn_null.dCor) mean2(MVconn_null.RCA)];
 %    spread = sqrt(spread.^2 + var([MVconn_null.FC MVconn_null.UVPD MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]));
-    spread = std([MVconn.FC MVconn_null.FCPC MVconn.MVPD MVconn.GOF MVconn.dCor MVconn.RCA] - ...
-    [MVconn_null.FC MVconn_null.FCPC MVconn_null.MVPD MVconn_null.GOF MVconn_null.dCor MVconn_null.RCA]); % better, since each baseline paired with real subject?
+    spread = std([MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.GOF MVconn.dCor MVconn.RCA] - ...
+    [mean(MVconn_null.FC,2) mean(MVconn_null.FCPC,2) mean(MVconn_null.MVPD,2) mean(MVconn_null.GOF,2) mean(MVconn_null.dCor,2) mean(MVconn_null.RCA,2)]); % better, since each baseline paired with real subject?
 else
     meanvl = meanvl - mean([MVconn_null.ImCoh MVconn_null.ImCohPC MVconn_null.MIM]);
 %       spread = sqrt(spread.^2 + var([MVconn_null.FC MVconn_null.UVPD MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]));
