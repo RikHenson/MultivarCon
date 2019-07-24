@@ -17,7 +17,7 @@ opt.percentage=99;
 opt.number=1;
 opt.regularisation=10.^(-1:0.1:3); % regularisation parameter for ridge regression.
 
-%% First example: positively correlated voxel activities within ROI1 (where both UniConn and MultiConn work)
+%% First example: positively correlated voxel activities within ROI1 (where both UV-conn and MV-conn metrics work)
 fnam = 'Positively correlated voxel activities within a ROI';
 %T = rand(nVoxs);
 T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
@@ -35,7 +35,7 @@ vis = [1 2 1 2];
 plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example1.png'),'png')
 
-%% Second example: anticorrelated voxel activities within ROI1 (where MulitCon work better)
+%% Second example: anticorrelated voxel activities within ROI1 (where MV-conn metrics work better)
 fnam = 'Negatively correlated voxel activities within a ROI';
 %T = rand(nVoxs);
 T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
@@ -53,23 +53,23 @@ vis = 2;
 plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example2.png'),'png')
 
-%% Third example: anticorrelation in ROI2 induced by the functional mapping (where MulitCon work better)
+%% Third example: anticorrelation in ROI2 induced by the functional mapping (where MVPD and dCor work better)
 fnam = 'Negative correlations induced by the functional mapping';
 %T = rand(nVoxs)-0.5;
 T = zeros(nVoxs); for j=1:mVoxs/2; T(j,j)=1; T(j+mVoxs/2,j+mVoxs/2)=-1; end
 cc = 0.5;
 C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 Ya = {}; Yb = {};
-for g=1:nSubj
+for s=1:nSubj
     for r=1:nRuns
-        Ya{g}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-        Yb{g}{r} = Ya{g}{r}*T + Noise*randn(nTime,nVoxs(2));
+        Ya{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
+        Yb{s}{r} = Ya{s}{r}*T + Noise*randn(nTime,nVoxs(2));
     end
 end
-vis = 2;
+vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
 [MVconn,MVconn_null] = computeMVconn(Ya,Yb,opt);
 plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
-saveas(gcf,'Graphics/mvcon_example3.png','png')
+saveas(gcf,fullfile('Graphics','mvcon_example3.png'),'png')
 
 %% Fourth example: run-dependent linear mapping (within-run measures work)
 fnam = 'Run-dependent linear connectivity';
