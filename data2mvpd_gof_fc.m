@@ -7,8 +7,8 @@ function [mvpd,gof,fc,fc_pc]=data2mvpd_gof_fc(Ya,Yb,options);
 %
 % Input:
 % Ya and Yb:  two cell arrays. The number of cells represents the number of runs, 
-%             and the dimension of each cell is equal to ntxna, for the ROIa,
-%             and ntxnb, for the ROIb.
+%             and the dimension of each cell is equal to ntxna, for the ROI1,
+%             and ntxnb, for the ROI2.
 % options     method: either pca_exvar or pca_ndir; either percentage or number:  
 %             the percentage of variance that we want to explain by applying 
 %             dimensionality reduction approach or the number ofICs to be considered.            
@@ -74,23 +74,19 @@ for jmet=1:1
         end
         
         % linear model estimate (ridge regression)
-        zYa{irun}=zscore(Ya{irun},0,2);
-        zYb{irun}=zscore(Yb{irun},0,2);
-        [B,~]=ridgeregmethod(zYa{irun},zYb{irun},options.regularisation);
-        zYb_for{irun}=zYa{irun}*B';
-        RDMb=zYb{irun}*zYb{irun}';
-        RDMb_for=zYb_for{irun}*zYb_for{irun}';
+        zYa{1}=zscore(Ya{irun},0,2);
+        zYb{1}=zscore(Yb{irun},0,2);
+        [B,~]=ridgeregmethod(zYa{1},zYb{1},options.regularisation);
+        zYb_for{1}=zYa{1}*B';
         
-        % correlation between the estimated and the actual RDM
-        gof(irun,jmet)=corr(RDMb(find(triu(RDMb,1))),RDMb_for(find(triu(RDMb_for,1))));
+        % correlation between the estimated and the actual RDM for the ROI2
+        [gof(irun,jmet),~] = data2rc(zYb,zYb_for,'Correlation');
     end
 end
 
-%averaging across the runs the MVPD (method(1)) and UVPD (method(2))
 mvpd=method(1)/length(Ya_app);
 gof=mean(gof(:,1));
 fc=mean(fc_app);
 fc_pc=mean(fc_PCs_app);
-
 
 end
