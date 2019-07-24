@@ -62,12 +62,12 @@ for jmet=1:1
         [Ybtrain_red,Vb,SVb]=dimreduction(Ybtrain,options.method,options);
 
         % linear model estimate (least-squares)
-        [B,~]=ridgeregmethod(Yatrain_red,Ybtrain_red,0);
+        [Ttilde,~]=ridgeregmethod(Yatrain_red,Ybtrain_red,0);
         Yatest_red=(Yatest-repmat(mean(Yatest),length(Yatest(:,1)),1))*Va;
         Ybtest_red=(Ybtest-repmat(mean(Ybtest),length(Ybtest(:,1)),1))*Vb;
         
         % correlation between the forecasted and the test data
-        Ybtest_for_red=Yatest_red*B';
+        Ybtest_for_red=Yatest_red*Ttilde';
         for icomp=1:length(Ybtest_for_red(1,:))
             M=corrcoef(Ybtest_red(:,icomp),Ybtest_for_red(:,icomp));
             method(jmet)=method(jmet)+(SVb(icomp)/sum(SVb))*M(1,2);
@@ -76,8 +76,8 @@ for jmet=1:1
         % linear model estimate (ridge regression)
         zYa{1}=zscore(Ya{irun},0,2);
         zYb{1}=zscore(Yb{irun},0,2);
-        [B,~]=ridgeregmethod(zYa{1},zYb{1},options.regularisation);
-        zYb_for{1}=zYa{1}*B';
+        [Ttilde,~]=ridgeregmethod(zYa{1},zYb{1},options.regularisation);
+        zYb_for{1}=zYa{1}*Ttilde';
         
         % correlation between the estimated and the actual RDM for the ROI2
         [gof(irun,jmet),~] = data2rc(zYb,zYb_for,'Correlation');
