@@ -3,16 +3,16 @@ function [Ttilde,gof]=ridgeregmethod(Ya,Yb,lambdas);
 % via a cross-validated version of the ridge regression method.
 % 
 % INPUT
-% Ya:         time series for the first ROI
-% Yb:         time series for the second ROI
+% Ya:         time series for the ROI1
+% Yb:         time series for the ROI2
 % lambdas:    set of possible regulariation parameter
 % OUTPUT
-% Ttilde:    estimated transformation
-% gof:       goodness-of-fit
+% Ttilde:     estimated transformation
+% gof:        goodness-of-fit
 % Alessio Basti 15/07/2019
 
-Ya=Ya'./std(Ya');
-Yb=Yb'./std(Yb');
+Ya=Ya';
+Yb=Yb';
 k=1;
 for i=lambdas                    
    H=Ya'*pinv(Ya*Ya'+i*eye(size(Ya,1)))*Ya;                                      
