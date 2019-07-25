@@ -184,7 +184,7 @@ rc_pooled = mean(sMVconn.RCA)-mean(sMVconn_null.RCA);
 fprintf('RC from the original trial x trial RDMs: \t: %.2f\n',rc_orig)
 fprintf('RC from the pooled data i.e. stim x stim RDMs: \t: %.2f\n',rc_pooled)
 
-%% Eighth example: closed-loop (where lagged MultiCon work better)
+%% Eighth example: closed-loop (where lagged MV-Conn metric works better)
 fnam = 'Closed-loop between subpopulations';
 
 % Parameter settings
