@@ -14,35 +14,31 @@ function [data,V,SV]=dimreduction(data,method,options);
 
 if strcmp(method,'svd_ndir')==1
     
-    if(isfield(options,'meancorrection'))
-       data=data-repmat(mean(data),length(data(:,1)),1);
-    end
-    [U S V]=svd(data);
-    number=min([options.number; length(data(1,:))]);
-    data=data*V(:,1:number);
-    V=V(:,1:number);
-    SV=var(data);
+    [V newdata SV] = pca(data,'Centered',options.meancorrection);
     
+    number=min([options.number; length(data(1,:))]);
+    data=newdata(:,1:number);
+    V=V(:,1:number);
+%    if sign(mean(V)) ~= sign(mean(mean(data))), data = -data; end % reverse sign to match mean
+    SV=SV(1:number);
+     
 elseif strcmp(method,'svd_exvar')==1
      
-    if(isfield(options,'meancorrection'))
-       data=data-repmat(mean(data),length(data(:,1)),1);
-    end
-    [U S V]=svd(data);
-    totvar=sum(var(data));
+    [V newdata SV] = pca(data,'Centered',options.meancorrection);
+
     index=0;
     i=1;
     while index==0
-        varapp(i)=var(data*V(:,i));
+        varapp(i)=var(newdata(:,i));
         sumvar(i)=sum(varapp(1:i));
-        if(sumvar(i)>(options.percentage/100)*totvar)
+        if(sumvar(i)>(options.percentage/100)*sum(SV))
             index=i;
         end
         i=i+1;
     end
-    data=data*V(:,1:index);
+    data=newdata(:,1:index);
     V=V(:,1:index);
-    SV=var(data);
+    SV=SV(1:index); 
     
 elseif strcmp(method,'average')==1  
     

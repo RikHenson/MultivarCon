@@ -1,7 +1,6 @@
 close all
 clear;
 clc;
-rng('default')
 
 % Parameter settings
 nSubj = 20;         % number of subjects (replications)
@@ -11,11 +10,14 @@ mVoxs = min(nVoxs);
 nRuns = 2;          % number of runs. MVPD requires at least 2 runs.
 Noise = 1;          % std of Noise in ROI2
 
-% MVPD parameters
-opt.method='svd_exvar';
-opt.percentage=90;
-opt.number=1;
-opt.regularisation=10.^(-1:0.2:3); % regularisation parameter for ridge regression.
+% Optional parameters
+opt.method = 'svd_exvar'; % reduce dimensions based on percent variance
+opt.percentage = 90; % percent variance cut-off
+opt.meancorrection = 1; % for dimension reduction (overwritten for pca_fc in data2mvpd_gof_fc.m)
+opt.regularisation = 10.^(-1:0.2:3); % regularisation parameter for ridge regression.
+opt.nRandomisation = 1;
+
+rng('default')
 
 %% First example: positively correlated voxel activities within ROI1 (where both UV-conn and MV-conn metrics work)
 fnam = 'Positively correlated voxel activities within a ROI';
