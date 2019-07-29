@@ -12,7 +12,7 @@ for s=1:length(X)
         [dcor(s,1),dcor_u(s,1)] = data2dCor(X{s},Y{s});
         [rc(s,1),~] = data2rc(X{s},Y{s},'Correlation');
     else
-       [mim(s,1),imcoh(s,1),imcoh_pc(s,1)] = data2mim(X{s},Y{s},opt);
+        [mim(s,1),imcoh(s,1),imcoh_pc(s,1)] = data2mim(X{s},Y{s},opt);
     end
 end
 
@@ -56,16 +56,16 @@ else
 end
 
 if ~isfield(opt,'segleng')
-    MVconn_null.FC = bfc;
-    MVconn_null.FCPC = bfc_pc;
-    MVconn_null.MVPD = bmvpd;
-    MVconn_null.GOF = bgof;
-    MVconn_null.dCor = bdcor;
-    MVconn_null.RCA = brc;
+    MVconn_null.FC = mean(bfc,2);
+    MVconn_null.FCPC = mean(bfc_pc,2);
+    MVconn_null.MVPD = mean(bmvpd,2);
+    MVconn_null.GOF = mean(bgof,2);
+    MVconn_null.dCor = mean(bdcor,2);
+    MVconn_null.RCA = mean(brc,2);
 else
-    MVconn_null.MIM = bmim;
-    MVconn_null.ImCoh = bimcoh;
-    MVconn_null.ImCohPC = bimcoh_pc;
+    MVconn_null.MIM = mean(bmim,2);
+    MVconn_null.ImCoh = mean(bimcoh,2);
+    MVconn_null.ImCohPC = mean(bimcoh_pc,2);
 end
 
 return
