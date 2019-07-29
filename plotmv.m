@@ -1,4 +1,4 @@
-function [] = plotmv(fnam,T,C,Ya,Yb,MVconn,MVconn_null,vis)
+function [] = plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
 % visualisation function for the results of computeMVconn.m
 FIG=figure('name',fnam,'Color','w','Position',[1 1 2*560 1.5*480]);
 
@@ -28,20 +28,20 @@ xlabel('Voxels in ROI2')
 ylabel('Voxels in ROI1')
 set(gca,'XTick',[]); set(gca,'YTick',[])
 
-nTime = min(size(Ya{1}{1},1),50);
+nTime = min(size(X{1}{1},1),50);
 %plot the timeseries for first nTime timepoints in run 1...
 if length(vis) == 4  % assume passing 2 voxel indices
     
     %for just one voxel from ROI1...
-    maxY = max([Ya{1}{1}(:,vis(1)); Ya{1}{1}(:,vis(2)); Yb{1}{1}(:,vis(3)); Yb{1}{1}(:,vis(4))]);
-    minY = min([Ya{1}{1}(:,vis(1)); Ya{1}{1}(:,vis(2)); Yb{1}{1}(:,vis(3)); Yb{1}{1}(:,vis(4))]);
+    maxY = max([X{1}{1}(:,vis(1)); X{1}{1}(:,vis(2)); Y{1}{1}(:,vis(3)); Y{1}{1}(:,vis(4))]);
+    minY = min([X{1}{1}(:,vis(1)); X{1}{1}(:,vis(2)); Y{1}{1}(:,vis(3)); Y{1}{1}(:,vis(4))]);
     
-    C=floor(1000*corrcoef(Ya{1}{1}(:,vis(1)),Ya{1}{1}(:,vis(2))))/1000;
+    C=floor(1000*corrcoef(X{1}{1}(:,vis(1)),X{1}{1}(:,vis(2))))/1000;
     
     subplot(3,2,3)
-    plot(Ya{1}{1}(1:nTime,vis(1)),':k','LineWidth',2)
+    plot(X{1}{1}(1:nTime,vis(1)),':k','LineWidth',2)
     hold on
-    plot(Ya{1}{1}(1:nTime,vis(2)),'k','LineWidth',2)
+    plot(X{1}{1}(1:nTime,vis(2)),'k','LineWidth',2)
     axis([1 nTime minY maxY])
     title(strcat('C. ROI1 data, corr=',num2str(C(1,2))))
     xlabel('Time or Trial')
@@ -49,11 +49,11 @@ if length(vis) == 4  % assume passing 2 voxel indices
     legend(sprintf('voxel%d',vis(1)),sprintf('voxel%d',vis(2)),'Location','best')
     
     % ...and one voxel from ROI 2
-    C=floor(1000*corrcoef(Yb{1}{1}(:,1),Yb{1}{1}(:,vis(4))))/1000;
+    C=floor(1000*corrcoef(Y{1}{1}(:,1),Y{1}{1}(:,vis(4))))/1000;
     subplot(3,2,4)
-    plot(Yb{1}{1}(1:nTime,vis(3)),':k','LineWidth',2)
+    plot(Y{1}{1}(1:nTime,vis(3)),':k','LineWidth',2)
     hold on
-    plot(Yb{1}{1}(1:nTime,vis(4)),'k','LineWidth',2)
+    plot(Y{1}{1}(1:nTime,vis(4)),'k','LineWidth',2)
     axis([1 nTime minY maxY])
     title(strcat('D. ROI2 data, corr=',num2str(C(1,2))))
     xlabel('Time or Trial')
@@ -63,13 +63,13 @@ if length(vis) == 4  % assume passing 2 voxel indices
 elseif vis == 2
     
     %...or all voxels from ROI1
-    %    maxY = max([Ya{1}{1}(:); Yb{1}{1}(:)]);
-    %    minY = min([Ya{1}{1}(:); Yb{1}{1}(:)]);
-    maxY = max(Ya{1}{1}(:));
-    minY = min(Ya{1}{1}(:));
+    %    maxY = max([X{1}{1}(:); Y{1}{1}(:)]);
+    %    minY = min([X{1}{1}(:); Y{1}{1}(:)]);
+    maxY = max(X{1}{1}(:));
+    minY = min(X{1}{1}(:));
     
     subplot(3,2,3)
-    imagesc(Ya{1}{1}(1:nTime,:)')
+    imagesc(X{1}{1}(1:nTime,:)')
     caxis([minY maxY])
     colorbar
     xlabel('Time')
@@ -77,11 +77,11 @@ elseif vis == 2
     title('C. ROI1 data')
     
     %...and all voxels from ROI2
-    maxY = max(Yb{1}{1}(:));
-    minY = min(Yb{1}{1}(:));
+    maxY = max(Y{1}{1}(:));
+    minY = min(Y{1}{1}(:));
     
     subplot(3,2,4)
-    imagesc(Yb{1}{1}(1:nTime,:)')
+    imagesc(Y{1}{1}(1:nTime,:)')
     caxis([minY maxY])
     colorbar
     xlabel('Time')
@@ -114,9 +114,9 @@ else
 end
 
 
-% Calculate connectivity when Ya and Yb independent random noise (since
+% Calculate connectivity when X and Y independent random noise (since
 % some connectivity measures, eg Dcor, not bounded by 0 or -1)
-if length(Ya)<20
+if length(X)<20
     warning('Insufficient subjects (<20) to estimate baseline error')
 else
     if ~isfield(MVconn,'MIM')
