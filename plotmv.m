@@ -93,11 +93,16 @@ end
 if ~isfield(MVconn,'MIM')
     subplot(3,2,5), hold on
     c = categorical({'1 Pearson','2 Pearson-PCA','3 MVPD','4 GOF','5 dCor','6 RCA'});
-    meanvl = mean([MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.GOF MVconn.dCor MVconn.RCA]);
-    spread = std([MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.GOF MVconn.dCor MVconn.RCA]);
-    % spread = iqr([MVconn.fc MVconn.uvpd MVconn.mvpd MVconn.dcor_u MVconn.dcor MVconn.rc]);
+    allval = [MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.GOF MVconn.dCor MVconn.RCA];
+    meanvl = mean(allval);
+    spread = std(allval);
+    % spread = iqr(allval);
     bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
     errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
+    ylabel('Mean +/- SD')
+    yyaxis right
+    bar(c,meanvl./spread,0.4,'FaceColor',[0 0 1],'FaceAlpha',0.3)
+    ylabel('Mean/SD')
     temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
     title('E. Raw Performance')
 else
@@ -105,10 +110,16 @@ else
     FIG=figure('name',fnam,'Color','w','Position',[1 1 2*560 1*480]);
     subplot(1,2,1), hold on
     c = categorical({'1 ImCoh','2 ImCoh-PCA','3 MIM'});
-    meanvl = mean([MVconn.ImCoh MVconn.ImCohPC MVconn.MIM]);
-    spread = std([MVconn.ImCoh MVconn.ImCohPC MVconn.MIM]);
+    allval = [MVconn.ImCoh MVconn_null.ImCohPC MVconn.MIM];
+    meanvl = mean(allval);
+    spread = std(allval);
+    % spread = iqr(allval);
     bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
     errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
+    ylabel('Mean +/- SD')
+    yyaxis right
+    bar(c,meanvl./spread,0.4,'FaceColor',[0 0 1],'FaceAlpha',0.3)
+    ylabel('Mean/SD')
     temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
     title('A. Raw Performance')
 end
@@ -121,26 +132,33 @@ if length(X)<20
 else
     if ~isfield(MVconn,'MIM')
         subplot(3,2,6), hold on
-        meanvl = meanvl - [mean2(MVconn_null.FC) mean2(MVconn_null.FCPC) mean2(MVconn_null.MVPD) mean2(MVconn_null.GOF) mean2(MVconn_null.dCor) mean2(MVconn_null.RCA)];
-        %    spread = sqrt(spread.^2 + var([MVconn_null.FC MVconn_null.UVPD MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]));
-        spread = std([MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.GOF MVconn.dCor MVconn.RCA] - ...
-            [mean(MVconn_null.FC,2) mean(MVconn_null.FCPC,2) mean(MVconn_null.MVPD,2) mean(MVconn_null.GOF,2) mean(MVconn_null.dCor,2) mean(MVconn_null.RCA,2)]); % better, since each baseline paired with real subject?
+        allnul = [MVconn_null.FC MVconn_null.FCPC MVconn_null.MVPD MVconn_null.GOF MVconn_null.dCor MVconn_null.RCA];
+        % meanvl = meanvl - mean(allnul);
+        % spread = sqrt(spread.^2 + var(allnul));
+        meanvl = mean(allval - allnul);
+        spread = std(allval - allnul);
         bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
         errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
-        bar(c,meanvl./spread,'FaceColor',[0.25,0.25,0.25])
+        ylabel('Mean +/- SD')
+        yyaxis right
+        bar(c,meanvl./spread,0.4,'FaceColor',[0 0 1],'FaceAlpha',0.3)
+        ylabel('Mean/SD')
         temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
         title('F. Normalised Performance')
     else
         subplot(1,2,2), hold on
-        meanvl = meanvl - mean([MVconn_null.ImCoh MVconn_null.ImCohPC MVconn_null.MIM]);
-        %       spread = sqrt(spread.^2 + var([MVconn_null.FC MVconn_null.UVPD MVconn_null.MVPD MVconn_null.dCor_univar MVconn_null.dCor MVconn_null.RCA]));
-        spread = std([MVconn.ImCoh MVconn_null.ImCohPC MVconn.MIM] - ...
-            [MVconn_null.ImCoh MVconn_null.ImCohPC MVconn_null.MIM]); % better, since each baseline paired with real subject?
+        allnul = [MVconn_null.ImCoh MVconn_null.ImCohPC MVconn_null.MIM];
+        % meanvl = meanvl - mean(allnul);
+        % spread = sqrt(spread.^2 + var(allnul));
+        meanvl = mean(allval - allnul);
+        spread = std(allval - allnul);
         bar(c,meanvl,'FaceColor',[0.75,0.75,0.75])
         errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
-         %bar(c,meanvl./spread,'FaceColor',[0.25,0.25,0.25])
+        ylabel('Mean +/- SD')
+        yyaxis right
+        bar(c,meanvl./spread,0.4,'FaceColor',[0 0 1],'FaceAlpha',0.3)
+        ylabel('Mean/SD')
         temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
-        title('B. Normalised Performance')
-        
+        title('B. Normalised Performance')        
     end
 end
