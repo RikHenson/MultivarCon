@@ -1,9 +1,9 @@
-function [dCor,dCor_u,fc] = data2dCor(Ya,Yb)
+function [dCor,dCor_u,fc] = data2dCor(X,Y)
 % calculates the multivariate distance correlation between two multivariate
 % time series (Geerlings et al. 2016, NI)
 %
-% Inputs are the multivariate time courses for two brain ROIs. Both Ya and
-% Yb are cell arrays containing the MV timeseries for different runs. In
+% Inputs are the multivariate time courses for two brain ROIs. Both X and
+% Y are cell arrays containing the MV timeseries for different runs. In
 % fMRI, these time series are assumed to be pre-processed raw data after
 % high-pass filtering and regressing out nuisance variables (e.g. motion
 % params, avg CSF, avg WM time series, etc.). the script first zscores the
@@ -23,21 +23,21 @@ function [dCor,dCor_u,fc] = data2dCor(Ya,Yb)
 
 
 %% compute the dcor and univariate distance matrices for each run
-nruns = numel(Ya); % number of runs
+nruns = numel(X); % number of runs
 
 % zscore the data (across voxels in each ROI and for each run)
 for r=1:nruns
-    %Ya_zs = zscore(Ya{r},0,2);
-    Ya_zs = Ya{r};Yb_zs = Yb{r};
-    %Yb_zs = zscore(Yb{r},0,2);
+    %X_zs = zscore(X{r},0,2);
+    X_zs = X{r};Y_zs = Y{r};
+    %Y_zs = zscore(Y{r},0,2);
     % get the voxel-average ts
-    ts_a = mean(Ya{r},2);ts_b = mean(Yb{r},2);
+    ts_a = mean(X{r},2);ts_b = mean(Y{r},2);
        
     % compute the pearson correlation
     [r_uv(r),~] = corr(ts_a,ts_b);
     
     % MV distance correlation (U-centering)
-    dcor(r) = dcor_uc(Ya_zs,Yb_zs);
+    dcor(r) = dcor_uc(X_zs,Y_zs);
     
     % UV distance correlation (D-centering)
     dcor_u(r) = dcor_dc(ts_a,ts_b);
@@ -121,4 +121,3 @@ fc = mean(r_uv);
     end
 
 end
-
