@@ -1,11 +1,11 @@
-function [mim,imcoh,imcoh_pc]=data2mim(Ya,Yb,opt);
+function [mim,imcoh,imcoh_pc]=data2mim(X,Y,opt);
 % It calculates the Multivariate Interaction Measure (MIM) between two multivariate time series
 % as described in Ewald et al.(2012), NeuroImage. 
 % Part of the code was taken from the METH toolbox (UKE).
 % Input:
-% Ya and Yb: two matrices of dimensions Tx(na) and Tx(nb), where T is the
-% number of time points and na (nb) is the number of scalar time series
-% within the region A (B).
+% X and Y:       two matrices of dimensions Tx(na) and Tx(nb), where T is the
+%                number of time points and na (nb) is the number of scalar time series
+%                within the region A (B).
 % opt.segleng:   segment length in bins, (frequency resolution is determined by it) 
 % opt.freqbins:  K vector. It contains the frequencies (in bins) over which  MIM is calculated.
 %                By setting freqbins=[] MIM is calculated across all
@@ -20,14 +20,14 @@ function [mim,imcoh,imcoh_pc]=data2mim(Ya,Yb,opt);
 % Alessio Basti 
 % version: 04/07/2019
 
-for irun=1:length(Ya)
-    [ndat na]=size(Ya{irun});
-    [ndat nb]=size(Yb{irun});
-    data=[Ya{irun}';Yb{irun}']';
-    data_univ=[mean(Ya{irun},2)';mean(Yb{irun},2)']';
-    [PC1_a{irun}]=dimreduction(Ya{irun},'pca_ndir',opt);
-    [PC1_b{irun}]=dimreduction(Yb{irun},'pca_ndir',opt);
-    data_univ_pc=[PC1_a{irun}';PC1_b{irun}']';
+for irun=1:length(X)
+    [ndat na]=size(X{irun});
+    [ndat nb]=size(Y{irun});
+    data=[X{irun}';Y{irun}']';
+    data_univ=[mean(X{irun},2)';mean(Y{irun},2)']';
+    [C1_a{irun}]=dimreduction(X{irun},'pca_ndir',opt);
+    [C1_b{irun}]=dimreduction(Y{irun},'pca_ndir',opt);
+    data_univ_pc=[C1_a{irun}';C1_b{irun}']';
     segshift=opt.segleng/2;
     epleng=2*opt.segleng;
 
