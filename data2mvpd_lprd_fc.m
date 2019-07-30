@@ -1,4 +1,4 @@
-function [mvpd,gof,fc,fc_pc]=data2mvpd_gof_fc(X,Y,options);
+function [mvpd,lprd,fc,fc_pc]=data2mvpd_lprd_fc(X,Y,options);
 % calculates the MultiVariate Pattern Dependence (MVPD) between two
 % multivariate time series (Anzellotti et al. 2017, Plos Comput Biol), the
 % goodness-of-fit (GOF) metric (Basti et al. 2019), the Pearson correlation
@@ -18,9 +18,9 @@ function [mvpd,gof,fc,fc_pc]=data2mvpd_gof_fc(X,Y,options);
 %             approach is used to estimate tha transformation.
 % Output:
 % mvpd:       MVPD value.
-% gof:        GOF value (correlation between estimated and actual RDMs)
+% lprd:       LPRD value (correlation between estimated and actual RDM)
 % fc:         Pearson correlation coefficient between average time series.
-% fc:         Pearson correlation coefficient between first two PCs.
+% fc_pc:      Pearson correlation coefficient between first two PCs.
 % Alessio Basti
 % version: 29/07/2019
 
@@ -104,12 +104,12 @@ for jmet=1:1
         zY_for{1}=zX{1}*Ttilde';
         
         % correlation between the estimated and the actual RDM for the ROI2
-        [gof(irun,jmet),~] = data2rc(zY,zY_for,'Correlation');
+        [lprd(irun,jmet),~] = data2rc(zY,zY_for,'Correlation');
     end
 end
 
 mvpd=method(1)/length(X_app);
-gof=mean(gof(:,1));
+lprd=mean(lprd(:,1));
 fc=mean(fc_app);
 fc_pc=mean(fc_PCs_app);
 
