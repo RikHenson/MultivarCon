@@ -92,8 +92,8 @@ end
 % plot the absolute performance
 if ~isfield(MVconn,'MIM')
     subplot(3,2,5), hold on
-    c = categorical({'1 Pearson','2 Pearson-PCA','3 MVPD','4 GOF','5 dCor','6 RCA'});
-    allval = [MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.GOF MVconn.dCor MVconn.RCA];
+    c = categorical({'1 Pearson','2 Pearson-PCA','3 MVPD','4 dCor','5 Pearson-RCA','6 LPRD'});
+    allval = [MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.dCor MVconn.RCA MVconn.LPRD];
     meanvl = mean(allval);
     spread = std(allval);
     % spread = iqr(allval);
@@ -132,7 +132,7 @@ if length(X)<20
 else
     if ~isfield(MVconn,'MIM')
         subplot(3,2,6), hold on
-        allnul = [MVconn_null.FC MVconn_null.FCPC MVconn_null.MVPD MVconn_null.GOF MVconn_null.dCor MVconn_null.RCA];
+        allnul = [MVconn_null.FC MVconn_null.FCPC MVconn_null.MVPD MVconn_null.dCor MVconn_null.RCA MVconn_null.LPRD];
         % meanvl = meanvl - mean(allnul);
         % spread = sqrt(spread.^2 + var(allnul));
         meanvl = mean(allval - allnul);
