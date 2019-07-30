@@ -53,7 +53,7 @@ if opt.nRandomisation == 1 %if only one, then don't bother with parfor like belo
 elseif opt.nRandomisation > 1
     for s=1:nSub % Ensure reasonably accurate estimate
         fprintf('null subject %d from %d \n',s,nSub)
-        for iter = 1:opt.nRandomisation
+        parfor iter = 1:opt.nRandomisation
             bX = {}; bY = {};
             for r=1:length(X{s})
                 bX{r} = X{s}{r}(randperm(size(X{s}{r},1)),:);
@@ -87,7 +87,7 @@ if ~isfield(opt,'segleng')
     MVconn.FC = fc;
     MVconn.FCPC = fc_pc;
     MVconn.MVPD = mvpd;
-    MVconn.LPRD = lprd;
+    MVconn.GOF = lprd;
     MVconn.dCor = dcor;
     MVconn.RCA = rc;
 else
@@ -100,7 +100,7 @@ if ~isfield(opt,'segleng')
     MVconn_null.FC = mean(bfc,2);
     MVconn_null.FCPC = mean(bfc_pc,2);
     MVconn_null.MVPD = mean(bmvpd,2);
-    MVconn_null.LPRD = mean(blprd,2);
+    MVconn_null.GOF = mean(blprd,2);
     MVconn_null.dCor = mean(bdcor,2);
     MVconn_null.RCA = mean(brc,2);
 else
