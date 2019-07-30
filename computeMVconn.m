@@ -87,7 +87,7 @@ if ~isfield(opt,'segleng')
     MVconn.FC = fc;
     MVconn.FCPC = fc_pc;
     MVconn.MVPD = mvpd;
-    MVconn.GOF = lprd;
+    MVconn.LPRD = lprd;
     MVconn.dCor = dcor;
     MVconn.RCA = rc;
 else
@@ -100,7 +100,7 @@ if ~isfield(opt,'segleng')
     MVconn_null.FC = mean(bfc,2);
     MVconn_null.FCPC = mean(bfc_pc,2);
     MVconn_null.MVPD = mean(bmvpd,2);
-    MVconn_null.GOF = mean(blprd,2);
+    MVconn_null.LPRD = mean(blprd,2);
     MVconn_null.dCor = mean(bdcor,2);
     MVconn_null.RCA = mean(brc,2);
 else
