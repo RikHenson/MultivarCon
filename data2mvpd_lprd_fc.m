@@ -1,9 +1,9 @@
 function [mvpd,lprd,fc,fc_pc]=data2mvpd_lprd_fc(X,Y,options);
 % calculates the MultiVariate Pattern Dependence (MVPD) between two
 % multivariate time series (Anzellotti et al. 2017, Plos Comput Biol), the
-% goodness-of-fit (GOF) metric (Basti et al. 2019), the Pearson correlation
-% between the average time series and the one between the first two
-% principal components (PCs).
+% linearly predicted representational dissimilarity (LPRD) metric (Basti et al. 2019), 
+% the Pearson correlation between the average time series and the one between the
+% first two principal components (PCs).
 %
 % Input:
 % X and Y:    two cell arrays. The number of cells represents the number of runs,
