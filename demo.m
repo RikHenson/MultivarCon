@@ -77,7 +77,7 @@ saveas(gcf,fullfile('Graphics','mvcon_example3.png'),'png')
 fnam = 'Run-dependent linear connectivity';
 cc = 0.5;
 C = kron([cc -cc; -cc cc],ones(nVoxs(1)/2)) + cc*eye(nVoxs(1));
-C = cov(rand(nVoxs(1))); %this example doesn't require a particular cov
+C = cov(rand(nVoxs(1))); %we can use a general cov matrix here
 % structure in either ROI.
 X = {}; Y = {};
 for s=1:nSubj
@@ -185,6 +185,18 @@ vis = 2;
 rc_pooled = mean(sMVconn.RCA)-mean(sMVconn_null.RCA);
 fprintf('RC from the original trial x trial RDMs: \t: %.2f\n',rc_orig)
 fprintf('RC from the pooled data i.e. stim x stim RDMs: \t: %.2f\n',rc_pooled)
+
+meanvl(1) = mean(MVconn.RCA - MVconn_null.RCA);
+spread(1) = std(MVconn.RCA - MVconn_null.RCA);
+meanvl(2) = mean(sMVconn.RCA - sMVconn_null.RCA);
+spread(2) = std(sMVconn.RCA - sMVconn_null.RCA);
+figure('Color','w')
+c = categorical({'1 RCA-orig','2 RCA-pooled'});
+bar(c,meanvl,.5,'FaceColor',[0.75,0.75,0.75])
+hold on
+errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
+ylabel('Mean +/- SD')
+saveas(gcf,fullfile('Graphics','mvcon_example7.png'),'png')
 
 %% Eighth example: closed-loop (where lagged MV-Conn metric works better)
 fnam = 'Closed-loop between subpopulations';
