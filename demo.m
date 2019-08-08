@@ -8,7 +8,7 @@ nTime = 200;        % number of time points
 nVoxs = [50 60];    % number of voxels in ROI1 and ROI2
 mVoxs = min(nVoxs);
 nRuns = 2;          % number of runs. MVPD requires at least 2 runs.
-Noise = 1;          % std of Noise in ROI2
+sigma = 1;          % std of Noise in ROI2
 
 % Optional parameters
 opt.method = 'svd_exvar'; % reduce dimensions based on percent variance
@@ -29,7 +29,7 @@ X = {}; Y = {};
 for s=1:nSubj
     for r=1:nRuns
         X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-        Y{s}{r} = X{s}{r}*T + Noise*randn(nTime,nVoxs(2));
+        Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
     end
 end
 vis = [1 2 1 2];
@@ -47,7 +47,7 @@ X = {}; Y = {};
 for s=1:nSubj
     for r=1:nRuns
         X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-        Y{s}{r} = X{s}{r}*T + Noise*randn(nTime,nVoxs(2));
+        Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
     end
 end
 vis = 2;
@@ -59,13 +59,13 @@ saveas(gcf,fullfile('Graphics','mvcon_example2.png'),'png')
 fnam = 'Negative correlations induced by the functional mapping';
 %T = rand(nVoxs)-0.5;
 T = zeros(nVoxs); for j=1:mVoxs/2; T(j,j)=1; T(j+mVoxs/2,j+mVoxs/2)=-1; end
-cc = 0.5;
+cc = 0;
 C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 X = {}; Y = {};
 for s=1:nSubj
     for r=1:nRuns
         X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-        Y{s}{r} = X{s}{r}*T + Noise*randn(nTime,nVoxs(2));
+        Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
     end
 end
 vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
@@ -84,7 +84,7 @@ for s=1:nSubj
     for r=1:nRuns
        X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
        T = randn(nVoxs);% changed this from rand(nVoxs)-.5 
-       Y{s}{r} = X{s}{r}*T + Noise*randn(nTime,nVoxs(2));
+       Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
     end
 end
 vis = 2;
@@ -104,8 +104,8 @@ Noise = 0.5;
 for s=1:nSubj
     for r=1:nRuns
        X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-       Y{s}{r} = abs(X{s}{r}*T) + Noise*randn(nTime,nVoxs(2));
-%        Y{s}{r} = (X{s}{r}*T).^2 + Noise*randn(nTime,nVoxs(2));% also a good example
+       Y{s}{r} = abs(X{s}{r}*T) + sigma*randn(nTime,nVoxs(2));
+%        Y{s}{r} = (X{s}{r}*T).^2 + sigma*randn(nTime,nVoxs(2));% also a good example
     end
 end
 %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
@@ -129,8 +129,8 @@ Noise = 1;
 for s=1:nSubj
     for r=1:nRuns
         X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-        Y{s}{r} = X{s}{r}*T + Noise*randn(nTime,nVoxs(2));
-        Y{s}{r} = Y{s}{r}   + 5*Noise*repmat(randn(nTime,1),1,nVoxs(2));
+        Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
+        Y{s}{r} = Y{s}{r}   + 5*sigma*repmat(randn(nTime,1),1,nVoxs(2));
     end
 end
 vis = 2;
@@ -155,8 +155,8 @@ for s=1:nSubj
     for r=1:nRuns
         X{s}{r} = mvnrnd(zeros(nStim,nVoxs(1)),C);
         X{s}{r} = repmat(X{s}{r},nRep,1);  % Repeat same pattern 
-        Y{s}{r} = X{s}{r}*T + Noise*randn(nTime,nVoxs(2));
-%        X{g}{r} = X{g}{r} + Noise*randn(nTime,nVoxs(1));  % independent noise
+        Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
+%        X{g}{r} = X{g}{r} + sigma*randn(nTime,nVoxs(1));  % independent noise
     end
 end
 
@@ -213,7 +213,7 @@ opt.freqbins=31:71; % low gamma band, i.e. from 30 Hz to 70 Hz
 delaYin= 10;       % delay in bins of the interaction between the regions,
                     % e.g. if the resolution is 256 Hz and the delaYin is 10, 
                     % the actual delay between a and b is delaYin/(256 Hz)= 40ms 
-Noise=0.1;
+sigma=0.1;
 
 % functional mapping between subpopulations (from ROI1 to ROI2)                 
 Tab=randn(floor(nVoxs/2));
@@ -227,19 +227,23 @@ Ca = ones(floor(nVoxs(1)/2))*cc + eye(floor(nVoxs(1)/2))*(1-cc);
 cc = 0.5;
 Cb = ones(floor(nVoxs(2)/2))*cc + eye(floor(nVoxs(2)/2))*(1-cc);
 
-% correlated noise due to source-leakage/volume-conduction/field-spread
-Mixnoise=randn(nTime,sum(nVoxs));
+% mixing matrices
+Ma=randn(2,sum(nVoxs),floor(nVoxs(1)/2));
+Mb=randn(2,sum(nVoxs),floor(nVoxs(2)/2));
 
 X = {}; Y = {};
 for s=1:nSubj
     for r=1:nRuns
         
+        % correlated noise due to source-leakage/volume-conduction/field-spread 
+        W=randn(nTime,sum(nVoxs));
+        
         % lagged multivariate interaction from a population in ROI1
         % (called LPa, i.e. leading population in ROI1) to a population in ROI2
         % (called FPb, i.e. following population in ROI2)
         LPa=mvnrnd(zeros(nTime+delaYin,floor(nVoxs(1)/2)),Ca);
-        FPb=(LPa(delaYin+1:end,:)*Tab)+Noise*Mixnoise*randn(sum(nVoxs),floor(nVoxs(2)/2));
-        LPa=LPa(1:nTime,:)+Noise*Mixnoise*randn(sum(nVoxs),floor(nVoxs(1)/2));
+        FPb=(LPa(delaYin+1:end,:)*Tab)+sigma*W*squeeze(Mb(1,:,:));
+        LPa=LPa(1:nTime,:)+sigma*W*squeeze(Ma(1,:,:));
         X{s}{r}=LPa;
         Y{s}{r}=FPb;
 
@@ -247,8 +251,8 @@ for s=1:nSubj
         % (called LPb, i.e. leading population in ROI2) to a population in ROI1
         % (called FPa, i.e. following population in ROI1)
         LPb=mvnrnd(zeros(nTime+delaYin,floor(nVoxs(2)/2)),Cb);
-        FPa=(LPb(delaYin+1:end,:)*Tba)+Noise*Mixnoise*randn(sum(nVoxs),floor(nVoxs(1)/2));
-        LPb=LPb(1:nTime,:)+Noise*Mixnoise*randn(sum(nVoxs),floor(nVoxs(2)/2));
+        FPa=(LPb(delaYin+1:end,:)*Tba)+sigma*W*squeeze(Ma(2,:,:));
+        LPb=LPb(1:nTime,:)+sigma*W*squeeze(Mb(2,:,:));
         X{s}{r}=[X{s}{r}, FPa];
         Y{s}{r}=[Y{s}{r}, LPb];
 
