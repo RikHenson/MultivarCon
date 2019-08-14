@@ -236,14 +236,14 @@ for s=1:nSubj
     for r=1:nRuns
         
         % correlated noise due to source-leakage/volume-conduction/field-spread 
-        W=randn(nTime,sum(nVoxs));
+        E=randn(nTime,sum(nVoxs));
         
         % lagged multivariate interaction from a population in ROI1
         % (called LPa, i.e. leading population in ROI1) to a population in ROI2
         % (called FPb, i.e. following population in ROI2)
         LPa=mvnrnd(zeros(nTime+delaYin,floor(nVoxs(1)/2)),Ca);
-        FPb=(LPa(delaYin+1:end,:)*Tab)+sigma*W*squeeze(Mb(1,:,:));
-        LPa=LPa(1:nTime,:)+sigma*W*squeeze(Ma(1,:,:));
+        FPb=(LPa(delaYin+1:end,:)*Tab)+sigma*E*squeeze(Mb(1,:,:));
+        LPa=LPa(1:nTime,:)+sigma*E*squeeze(Ma(1,:,:));
         X{s}{r}=LPa;
         Y{s}{r}=FPb;
 
@@ -251,8 +251,8 @@ for s=1:nSubj
         % (called LPb, i.e. leading population in ROI2) to a population in ROI1
         % (called FPa, i.e. following population in ROI1)
         LPb=mvnrnd(zeros(nTime+delaYin,floor(nVoxs(2)/2)),Cb);
-        FPa=(LPb(delaYin+1:end,:)*Tba)+sigma*W*squeeze(Ma(2,:,:));
-        LPb=LPb(1:nTime,:)+sigma*W*squeeze(Mb(2,:,:));
+        FPa=(LPb(delaYin+1:end,:)*Tba)+sigma*E*squeeze(Ma(2,:,:));
+        LPb=LPb(1:nTime,:)+sigma*E*squeeze(Mb(2,:,:));
         X{s}{r}=[X{s}{r}, FPa];
         Y{s}{r}=[Y{s}{r}, LPb];
 
