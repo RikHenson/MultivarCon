@@ -198,8 +198,8 @@ errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
 ylabel('Mean +/- SD')
 saveas(gcf,fullfile('Graphics','mvcon_example7.png'),'png')
 
-%% Eighth example: closed-loop (where lagged MV-Conn metric works better)
-fnam = 'Closed-loop between subpopulations';
+%% Eighth example: multivariate lagged interaction (where lagged MV-Conn metric works better)
+fnam = 'Multivariate lagged interaction';
 
 % Parameter settings
 nTime = 15360;      % number of time points, e.g. 15360 is equivalent to 60 seconds 
@@ -213,48 +213,28 @@ opt.freqbins=31:71; % low gamma band, i.e. from 30 Hz to 70 Hz
 delaYin= 10;       % delay in bins of the interaction between the regions,
                     % e.g. if the resolution is 256 Hz and the delaYin is 10, 
                     % the actual delay between a and b is delaYin/(256 Hz)= 40ms 
-sigma=0.1;
 
-% functional mapping between subpopulations (from ROI1 to ROI2)                 
-Tab=randn(floor(nVoxs/2));
-% functional mapping between subpopulations (from ROI2 to ROI1)  
-Tba=randn(floor(nVoxs(2:-1:1)/2));
+% functional mapping (from ROI1 to ROI2)                 
+T=randn(nVoxs);
 
-% covariance matrix for the subpopulation in ROI1 that leads the one in ROI2
-cc = 0.5;
-Ca = ones(floor(nVoxs(1)/2))*cc + eye(floor(nVoxs(1)/2))*(1-cc);
-% covariance matrix for the subpopulation in ROI2 that leads the one in ROI1
-cc = 0.5;
-Cb = ones(floor(nVoxs(2)/2))*cc + eye(floor(nVoxs(2)/2))*(1-cc);
+cc = 0;
+Ca = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 
-% mixing matrices
-Ma=randn(2,sum(nVoxs),floor(nVoxs(1)/2));
-Mb=randn(2,sum(nVoxs),floor(nVoxs(2)/2));
+% mixing matrices for simulating correlated noise due to source-leakage/volume-conduction/field-spread 
+Mx=randn(sum(nVoxs),nVoxs(1));
+My=randn(sum(nVoxs),nVoxs(2));
 
 X = {}; Y = {};
 for s=1:nSubj
     for r=1:nRuns
-        
-        % correlated noise due to source-leakage/volume-conduction/field-spread 
+          
+        % noise to be mixed
         E=randn(nTime,sum(nVoxs));
-        
-        % lagged multivariate interaction from a population in ROI1
-        % (called LPa, i.e. leading population in ROI1) to a population in ROI2
-        % (called FPb, i.e. following population in ROI2)
-        LPa=mvnrnd(zeros(nTime+delaYin,floor(nVoxs(1)/2)),Ca);
-        FPb=(LPa(delaYin+1:end,:)*Tab)+sigma*E*squeeze(Mb(1,:,:));
-        LPa=LPa(1:nTime,:)+sigma*E*squeeze(Ma(1,:,:));
-        X{s}{r}=LPa;
-        Y{s}{r}=FPb;
 
-        % lagged multivariate interaction from a population in ROI2
-        % (called LPb, i.e. leading population in ROI2) to a population in ROI1
-        % (called FPa, i.e. following population in ROI1)
-        LPb=mvnrnd(zeros(nTime+delaYin,floor(nVoxs(2)/2)),Cb);
-        FPa=(LPb(delaYin+1:end,:)*Tba)+sigma*E*squeeze(Ma(2,:,:));
-        LPb=LPb(1:nTime,:)+sigma*E*squeeze(Mb(2,:,:));
-        X{s}{r}=[X{s}{r}, FPa];
-        Y{s}{r}=[Y{s}{r}, LPb];
+        % lagged multivariate interaction
+        X{s}{r}=mvnrnd(zeros(nTime+delaYin,nVoxs(1)),Ca);
+        Y{s}{r}=(X{s}{r}(delaYin+1:end,:)*T)+sigma*E*My(:,:);
+        X{s}{r}=X{s}{r}(1:nTime,:)+sigma*E*Mx(:,:);
 
     end
 end
