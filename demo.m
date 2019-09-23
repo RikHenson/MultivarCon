@@ -241,7 +241,7 @@ end
 
 vis = [1 2 1 2];
 [MVconn,MVconn_null] = computeMVconn(X,Y,opt);
-plotmv(fnam,Tab,Ca,X,Y,MVconn,MVconn_null,vis)
+plotmv(fnam,T,Ca,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example8.png'),'png')
 
 return
