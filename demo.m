@@ -15,7 +15,7 @@ opt.method = 'svd_exvar'; % reduce dimensions based on percent variance
 opt.percentage = 90; % percent variance cut-off
 opt.meancorrection = 1; % for dimension reduction (overwritten for pca_fc in data2mvpd_lprd_fc.m)
 opt.regularisation = 10.^(-1:0.2:3); % regularisation parameter for ridge regression.
-opt.nRandomisation = 1;
+opt.nRandomisation = 20;
 
 rng('default')
 
