@@ -15,7 +15,8 @@ opt.method = 'svd_exvar'; % reduce dimensions based on percent variance
 opt.percentage = 90; % percent variance cut-off
 opt.meancorrection = 1; % for dimension reduction (overwritten for pca_fc in data2mvpd_lprd_fc.m)
 opt.regularisation = 10.^(-1:0.2:3); % regularisation parameter for ridge regression.
-opt.nRandomisation = 1;
+opt.zscore = 0; % Whether to Z-score timeseries for dCor (need to turn off for Examples 5-6)
+opt.nRandomisation = 20; % Needs to be >1 to get more stable estimates of null distributions (though will trigger parfor if >1)
 
 rng('default')
 
@@ -29,7 +30,9 @@ X = {}; Y = {};
 for s=1:nSubj
     for r=1:nRuns
         X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-        Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
+        Y{s}{r} = X{s}{r}*T;
+        X{s}{r} = X{s}{r} + sigma*randn(nTime,nVoxs(1)); % Add independent measurement noise
+        Y{s}{r} = Y{s}{r} + sigma*randn(nTime,nVoxs(2));
     end
 end
 vis = [1 2 1 2];
@@ -47,7 +50,9 @@ X = {}; Y = {};
 for s=1:nSubj
     for r=1:nRuns
         X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-        Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
+        Y{s}{r} = X{s}{r}*T;
+        X{s}{r} = X{s}{r} + sigma*randn(nTime,nVoxs(1)); % Add independent measurement noise
+        Y{s}{r} = Y{s}{r} + sigma*randn(nTime,nVoxs(2));
     end
 end
 vis = 2;
@@ -65,7 +70,9 @@ X = {}; Y = {};
 for s=1:nSubj
     for r=1:nRuns
         X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-        Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
+        Y{s}{r} = X{s}{r}*T;
+        X{s}{r} = X{s}{r} + sigma*randn(nTime,nVoxs(1)); % Add independent measurement noise
+        Y{s}{r} = Y{s}{r} + sigma*randn(nTime,nVoxs(2));
     end
 end
 vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
@@ -75,16 +82,17 @@ saveas(gcf,fullfile('Graphics','mvcon_example3.png'),'png')
 
 %% Fourth example: run-dependent linear mapping (within-run measures work)
 fnam = 'Run-dependent linear connectivity';
-cc = 0.5;
-C = kron([cc -cc; -cc cc],ones(nVoxs(1)/2)) + cc*eye(nVoxs(1));
-C = cov(rand(nVoxs(1))); %we can use a general cov matrix here
-% structure in either ROI.
+cc = 0;
+C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
+% C = cov(rand(nVoxs(1))); %we can use a general cov matrix here
 X = {}; Y = {};
 for s=1:nSubj
     for r=1:nRuns
-       X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-       T = randn(nVoxs);% changed this from rand(nVoxs)-.5 
-       Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
+        X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
+        T = randn(nVoxs);% changed this from rand(nVoxs)-.5
+        Y{s}{r} = X{s}{r}*T;
+        X{s}{r} = X{s}{r} + sigma*randn(nTime,nVoxs(1)); % Add independent measurement noise
+        Y{s}{r} = Y{s}{r} + sigma*randn(nTime,nVoxs(2));
     end
 end
 vis = 2;
@@ -96,16 +104,19 @@ saveas(gcf,fullfile('Graphics','mvcon_example4.png'),'png')
 fnam = 'Nonlinear connectivity';
 %T = rand(nVoxs);
 T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
-cc = 0.5;
+cc = 0.5; % cannot be zero now
 C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 %C = kron([cc -cc; -cc cc],ones(nVoxs(1)/2)) + cc*eye(nVoxs(1));
 X = {}; Y = {};
-Noise = 0.5;
+%sigma = 0.5; % Need to reduce noise?
+%opt.zscore = 0; % Need to turn off z-scoring of dCor (or turn off for all examples above? - results same...)
 for s=1:nSubj
     for r=1:nRuns
        X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-       Y{s}{r} = abs(X{s}{r}*T) + sigma*randn(nTime,nVoxs(2));
-%        Y{s}{r} = (X{s}{r}*T).^2 + sigma*randn(nTime,nVoxs(2));% also a good example
+       Y{s}{r} = abs(X{s}{r}*T);
+%        Y{s}{r} = (X{s}{r}*T).^2;
+        X{s}{r} = X{s}{r} + sigma*randn(nTime,nVoxs(1)); % Add independent measurement noise
+        Y{s}{r} = Y{s}{r} + sigma*randn(nTime,nVoxs(2));
     end
 end
 %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
@@ -129,8 +140,10 @@ Noise = 1;
 for s=1:nSubj
     for r=1:nRuns
         X{s}{r} = mvnrnd(zeros(nTime,nVoxs(1)),C);
-        Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
-        Y{s}{r} = Y{s}{r}   + 5*sigma*repmat(randn(nTime,1),1,nVoxs(2));
+        Y{s}{r} = X{s}{r}*T;
+        X{s}{r} = X{s}{r} + sigma*randn(nTime,nVoxs(1)); % Add independent measurement noise
+        Y{s}{r} = Y{s}{r} + sigma*randn(nTime,nVoxs(2));
+        Y{s}{r} = Y{s}{r} + 5*sigma*repmat(randn(nTime,1),1,nVoxs(2));
     end
 end
 vis = 2;
@@ -138,65 +151,65 @@ vis = 2;
 plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example6.png'),'png')
 
-%% Seventh example: averaging timepoints (trials) with same stimulus improves RCA
-fnam = 'Negative correlations induced by the functional mapping; averaging across stimuli of same type';
-%T = rand(nVoxs)-0.5;
-T = zeros(nVoxs); for j=1:mVoxs/2; T(j,j)=1; T(j+mVoxs/2,j+mVoxs/2)=-1; end
-Noise = 1;
-nStim = 20;
-nRep  = nTime/nStim;  % Assumes a factor of nTime
-stimuli = repmat([1:nStim],1,nRep);
-
-cc = 0;
-C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
-
-X = {}; Y = {};
-for s=1:nSubj
-    for r=1:nRuns
-        X{s}{r} = mvnrnd(zeros(nStim,nVoxs(1)),C);
-        X{s}{r} = repmat(X{s}{r},nRep,1);  % Repeat same pattern 
-        Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
-%        X{g}{r} = X{g}{r} + sigma*randn(nTime,nVoxs(1));  % independent noise
-    end
-end
-
-vis = 2;
-%vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
-[MVconn,MVconn_null] = computeMVconn(X,Y,opt);
-% plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
-% saveas(gcf,'Graphics/mvcon_example7a.png','png')
-rc_orig = mean(MVconn.RCA)-mean(MVconn_null.RCA);
-
-sX = {}; sY = {};
-for s=1:nSubj
-    for r=1:nRuns
-        for stim = 1:nStim
-            sX{s}{r}(stim,:) = mean(X{s}{r}(find(stimuli==stim),:));
-            sY{s}{r}(stim,:) = mean(Y{s}{r}(find(stimuli==stim),:));
-        end
-    end
-end
-
-vis = 2;
-%vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
-[sMVconn,sMVconn_null] = computeMVconn(sX,sY,opt);
-% plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
-% saveas(gcf,'Graphics/mvcon_example7b.png','png')
-rc_pooled = mean(sMVconn.RCA)-mean(sMVconn_null.RCA);
-fprintf('RC from the original trial x trial RDMs: \t: %.2f\n',rc_orig)
-fprintf('RC from the pooled data i.e. stim x stim RDMs: \t: %.2f\n',rc_pooled)
-
-meanvl(1) = mean(MVconn.RCA - MVconn_null.RCA);
-spread(1) = std(MVconn.RCA - MVconn_null.RCA);
-meanvl(2) = mean(sMVconn.RCA - sMVconn_null.RCA);
-spread(2) = std(sMVconn.RCA - sMVconn_null.RCA);
-figure('Color','w')
-c = categorical({'1 RCA-orig','2 RCA-pooled'});
-bar(c,meanvl,.5,'FaceColor',[0.75,0.75,0.75])
-hold on
-errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
-ylabel('Mean +/- SD')
-saveas(gcf,fullfile('Graphics','mvcon_example7.png'),'png')
+% %% Seventh example: averaging timepoints (trials) with same stimulus improves RCA
+% fnam = 'Negative correlations induced by the functional mapping; averaging across stimuli of same type';
+% %T = rand(nVoxs)-0.5;
+% T = zeros(nVoxs); for j=1:mVoxs/2; T(j,j)=1; T(j+mVoxs/2,j+mVoxs/2)=-1; end
+% Noise = 1;
+% nStim = 20;
+% nRep  = nTime/nStim;  % Assumes a factor of nTime
+% stimuli = repmat([1:nStim],1,nRep);
+% 
+% cc = 0;
+% C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
+% 
+% X = {}; Y = {};
+% for s=1:nSubj
+%     for r=1:nRuns
+%         X{s}{r} = mvnrnd(zeros(nStim,nVoxs(1)),C);
+%         X{s}{r} = repmat(X{s}{r},nRep,1);  % Repeat same pattern 
+%         Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
+% %        X{g}{r} = X{g}{r} + sigma*randn(nTime,nVoxs(1));  % independent noise
+%     end
+% end
+% 
+% vis = 2;
+% %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
+% [MVconn,MVconn_null] = computeMVconn(X,Y,opt);
+% % plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
+% % saveas(gcf,'Graphics/mvcon_example7a.png','png')
+% rc_orig = mean(MVconn.RCA)-mean(MVconn_null.RCA);
+% 
+% sX = {}; sY = {};
+% for s=1:nSubj
+%     for r=1:nRuns
+%         for stim = 1:nStim
+%             sX{s}{r}(stim,:) = mean(X{s}{r}(find(stimuli==stim),:));
+%             sY{s}{r}(stim,:) = mean(Y{s}{r}(find(stimuli==stim),:));
+%         end
+%     end
+% end
+% 
+% vis = 2;
+% %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
+% [sMVconn,sMVconn_null] = computeMVconn(sX,sY,opt);
+% % plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
+% % saveas(gcf,'Graphics/mvcon_example7b.png','png')
+% rc_pooled = mean(sMVconn.RCA)-mean(sMVconn_null.RCA);
+% fprintf('RC from the original trial x trial RDMs: \t: %.2f\n',rc_orig)
+% fprintf('RC from the pooled data i.e. stim x stim RDMs: \t: %.2f\n',rc_pooled)
+% 
+% meanvl(1) = mean(MVconn.RCA - MVconn_null.RCA);
+% spread(1) = std(MVconn.RCA - MVconn_null.RCA);
+% meanvl(2) = mean(sMVconn.RCA - sMVconn_null.RCA);
+% spread(2) = std(sMVconn.RCA - sMVconn_null.RCA);
+% figure('Color','w')
+% c = categorical({'1 RCA-orig','2 RCA-pooled'});
+% bar(c,meanvl,.5,'FaceColor',[0.75,0.75,0.75])
+% hold on
+% errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
+% ylabel('Mean +/- SD')
+% saveas(gcf,fullfile('Graphics','mvcon_example7.png'),'png')
 
 %% Eighth example: multivariate lagged interaction (where lagged MV-Conn metric works better)
 fnam = 'Multivariate lagged interaction';
