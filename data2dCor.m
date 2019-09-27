@@ -1,4 +1,4 @@
-function [dCor,dCor_u,fc] = data2dCor(X,Y)
+function [dCor,dCor_u,fc] = data2dCor(X,Y,opt)
 % calculates the multivariate distance correlation between two multivariate
 % time series (Geerlings et al. 2016, NI)
 %
@@ -27,9 +27,15 @@ nruns = numel(X); % number of runs
 
 % zscore the data (across voxels in each ROI and for each run)
 for r=1:nruns
-    %X_zs = zscore(X{r},0,2);
-    X_zs = X{r};Y_zs = Y{r};
-    %Y_zs = zscore(Y{r},0,2);
+    
+    if opt.zscore
+        X_zs = zscore(X{r},0,2);
+        Y_zs = zscore(Y{r},0,2);
+    else
+        X_zs = X{r};
+        Y_zs = Y{r};
+    end
+    
     % get the voxel-average ts
     ts_a = mean(X{r},2);ts_b = mean(Y{r},2);
        

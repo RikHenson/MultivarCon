@@ -10,7 +10,7 @@ nSub = length(X);
 for s=1:nSub
     if ~isfield(opt,'segleng') 
         [mvpd(s,1),lprd(s,1),fc(s,1),fc_pc(s,1)] = data2mvpd_lprd_fc(X{s},Y{s},opt); 
-        [dcor(s,1),dcor_u(s,1)] = data2dCor(X{s},Y{s});
+        [dcor(s,1),dcor_u(s,1)] = data2dCor(X{s},Y{s},opt);
         [rc(s,1),~] = data2rc(X{s},Y{s},'Correlation');
     else
         [mim(s,1),imcoh(s,1),imcoh_pc(s,1)] = data2mim(X{s},Y{s},opt);
@@ -44,7 +44,7 @@ if opt.nRandomisation == 1 %if only one, then don't bother with parfor like belo
         end
         if ~isfield(opt,'segleng')
             [bmvpd(s,iter),blprd(s,iter),bfc(s,iter),bfc_pc(s,iter)] = data2mvpd_lprd_fc(bX,bY,opt);
-            [bdcor(s,iter),bdcor_u(s,iter)] = data2dCor(bX,bY);
+            [bdcor(s,iter),bdcor_u(s,iter)] = data2dCor(bX,bY,opt);
             [brc(s,iter),~] = data2rc(bX,bY,'Correlation');
         else
             [bmim(s,iter),bimcoh(s,iter),bimcoh_pc(s,iter)] = data2mim(bX,bY,opt);
@@ -61,7 +61,7 @@ elseif opt.nRandomisation > 1
             end
             if ~isfield(opt,'segleng')
                 [tmp_bmvpd{iter},tmp_blprd{iter},tmp_bfc{iter},tmp_bfc_pc{iter}] = data2mvpd_lprd_fc(bX,bY,opt);
-                [tmp_bdcor{iter},~] = data2dCor(bX,bY);
+                [tmp_bdcor{iter},~] = data2dCor(bX,bY,opt);
                 [tmp_brc{iter},~] = data2rc(bX,bY,'Correlation');
             else
                 [tmp_bmim{iter},tmp_bimcoh{iter},tmp_bimcoh_pc{iter}] = data2mim(bX,bY,opt);
