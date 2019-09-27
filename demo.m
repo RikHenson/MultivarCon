@@ -1,3 +1,5 @@
+% A Basti, H Nilli & R Henson
+
 close all
 clear;
 clc;
