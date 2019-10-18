@@ -1,9 +1,8 @@
-function [mvpd,lprd,fc,fc_pc]=data2mvpd_lprd_fc(X,Y,options);
+function [mvpd,lprd,fc,fc_svd]=data2mvpd_lprd_fc(X,Y,options);
 % calculates the MultiVariate Pattern Dependence (MVPD) between two
 % multivariate time series (Anzellotti et al. 2017, Plos Comput Biol), the
 % linearly predicted representational dissimilarity (LPRD) metric (Basti et al. 2019), 
-% the Pearson correlation between the average time series and the one between the
-% first two principal components (PCs).
+% the Pearson correlation between the average time series and the one after a singular value decomposition.
 %
 % Input:
 % X and Y:    two cell arrays. The number of cells represents the number of runs,
@@ -20,7 +19,7 @@ function [mvpd,lprd,fc,fc_pc]=data2mvpd_lprd_fc(X,Y,options);
 % mvpd:       MVPD value.
 % lprd:       LPRD value (correlation between estimated and actual RDM)
 % fc:         Pearson correlation coefficient between average time series.
-% fc_pc:      Pearson correlation coefficient between first two PCs.
+% fc_svd:     Pearson correlation coefficient between first two SVs.
 % Alessio Basti
 % version: 29/07/2019
 
@@ -40,7 +39,7 @@ for irun=1:length(X)
     opt.meancorrection = 0; % so can return mean over voxels if dominant spatial mode
     [C1_a{irun}]=dimreduction(X{irun},'svd_ndir',opt);
     [C1_b{irun}]=dimreduction(Y{irun},'svd_ndir',opt);
-    fc_PCs_app(irun) = abs(corr(C1_a{irun},C1_b{irun})); % abs because sign of first PC arbitrary
+    fc_SVs_app(irun) = abs(corr(C1_a{irun},C1_b{irun})); % abs because sign of first SV arbitrary
 end
 
 method=zeros(2,1);
@@ -111,6 +110,6 @@ end
 mvpd=method(1)/length(X_app);
 lprd=mean(lprd(:,1));
 fc=mean(fc_app);
-fc_pc=mean(fc_PCs_app);
+fc_svd=mean(fc_SVs_app);
 
 end
