@@ -92,8 +92,8 @@ end
 % plot the absolute performance
 if ~isfield(MVconn,'MIM')
     subplot(3,2,5), hold on
-    c = categorical({'1 Pearson','2 Pearson-PCA','3 MVPD','4 dCor','5 Pearson-RCA','6 LPRD'});
-    allval = [MVconn.FC MVconn.FCPC MVconn.MVPD MVconn.dCor MVconn.RCA MVconn.LPRD];
+    c = categorical({'1 Pearson','2 Pearson-SVD','3 MVPD','4 dCor','5 Pearson-RCA','6 LPRD'});
+    allval = [MVconn.FC MVconn.FCSVD MVconn.MVPD MVconn.dCor MVconn.RCA MVconn.LPRD];
     meanvl = mean(allval);
     spread = std(allval);
     % spread = iqr(allval);
@@ -109,8 +109,8 @@ else
     close(FIG)
     FIG=figure('name',fnam,'Color','w','Position',[1 1 2*560 1*480]);
     subplot(1,2,1), hold on
-    c = categorical({'1 ImCoh','2 ImCoh-PCA','3 MIM'});
-    allval = [MVconn.ImCoh MVconn_null.ImCohPC MVconn.MIM];
+    c = categorical({'1 ImCoh','2 ImCoh-SVD','3 MIM'});
+    allval = [MVconn.ImCoh MVconn_null.ImCohSVD MVconn.MIM];
     meanvl = mean(allval);
     spread = std(allval);
     % spread = iqr(allval);
@@ -132,7 +132,7 @@ if length(X)<20
 else
     if ~isfield(MVconn,'MIM')
         subplot(3,2,6), hold on
-        allnul = [MVconn_null.FC MVconn_null.FCPC MVconn_null.MVPD MVconn_null.dCor MVconn_null.RCA MVconn_null.LPRD];
+        allnul = [MVconn_null.FC MVconn_null.FCSVD MVconn_null.MVPD MVconn_null.dCor MVconn_null.RCA MVconn_null.LPRD];
         % meanvl = meanvl - mean(allnul);
         % spread = sqrt(spread.^2 + var(allnul));
         meanvl = mean(allval - allnul);
@@ -147,7 +147,7 @@ else
         title('F. Normalised Performance')
     else
         subplot(1,2,2), hold on
-        allnul = [MVconn_null.ImCoh MVconn_null.ImCohPC MVconn_null.MIM];
+        allnul = [MVconn_null.ImCoh MVconn_null.ImCohSVD MVconn_null.MIM];
         % meanvl = meanvl - mean(allnul);
         % spread = sqrt(spread.^2 + var(allnul));
         meanvl = mean(allval - allnul);
