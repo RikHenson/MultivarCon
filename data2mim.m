@@ -20,6 +20,7 @@ function [mim,imcoh,imcoh_svd]=data2mim(X,Y,opt);
 % Alessio Basti 
 % version: 04/07/2019
 
+opt.number=1;
 for irun=1:length(X)
     [ndat na]=size(X{irun});
     [ndat nb]=size(Y{irun});
