@@ -1,4 +1,4 @@
-% A Basti, H Nilli & R Henson
+% A Basti, H Nili & R Henson
 
 close all
 clear;
@@ -235,21 +235,14 @@ T=randn(nVoxs);
 cc = 0;
 Ca = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 
-% mixing matrices for simulating correlated noise due to source-leakage/volume-conduction/field-spread 
-Mx=randn(sum(nVoxs),nVoxs(1));
-My=randn(sum(nVoxs),nVoxs(2));
-
 X = {}; Y = {};
 for s=1:nSubj
     for r=1:nRuns
-          
-        % noise to be mixed
-        E=randn(nTime,sum(nVoxs));
 
         % lagged multivariate interaction
         X{s}{r}=mvnrnd(zeros(nTime+delaYin,nVoxs(1)),Ca);
-        Y{s}{r}=(X{s}{r}(delaYin+1:end,:)*T)+sigma*E*My(:,:);
-        X{s}{r}=X{s}{r}(1:nTime,:)+sigma*E*Mx(:,:);
+        Y{s}{r}=(X{s}{r}(delaYin+1:end,:)*T)+sigma*randn(nTime,nVoxs(2));
+        X{s}{r}=X{s}{r}(1:nTime,:)+sigma*randn(nTime,nVoxs(1));
 
     end
 end
@@ -260,4 +253,3 @@ plotmv(fnam,T,Ca,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example8.png'),'png')
 
 return
-
