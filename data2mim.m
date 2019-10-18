@@ -1,6 +1,6 @@
-function [mim,imcoh,imcoh_pc]=data2mim(X,Y,opt);
-% It calculates the Multivariate Interaction Measure (MIM) between two multivariate time series
-% as described in Ewald et al.(2012), NeuroImage. 
+function [mim,imcoh,imcoh_svd]=data2mim(X,Y,opt);
+% It calculates the multivariate interaction measure (MIM) between two multivariate time series
+% as described in Ewald et al.(2012) and two different imaginary part of coherency approaches. 
 % Part of the code was taken from the METH toolbox (UKE).
 % Input:
 % X and Y:       two matrices of dimensions Tx(na) and Tx(nb), where T is the
@@ -16,7 +16,7 @@ function [mim,imcoh,imcoh_pc]=data2mim(X,Y,opt);
 % Output: 
 % mim:           MIM value.
 % imcoh:         ImCoh value on the average scalar time series 
-% imcoh_pc:      ImCoh value on the first PCs
+% imcoh_svd:     ImCoh value on the first SVs
 % Alessio Basti 
 % version: 04/07/2019
 
@@ -27,7 +27,7 @@ for irun=1:length(X)
     data_univ=[mean(X{irun},2)';mean(Y{irun},2)']';
     [C1_a{irun}]=dimreduction(X{irun},'pca_ndir',opt);
     [C1_b{irun}]=dimreduction(Y{irun},'pca_ndir',opt);
-    data_univ_pc=[C1_a{irun}';C1_b{irun}']';
+    data_univ_svd=[C1_a{irun}';C1_b{irun}']';
     segshift=opt.segleng/2;
     epleng=2*opt.segleng;
 
@@ -48,18 +48,18 @@ for irun=1:length(X)
     % compute the cross-spectral matrices
     [cs,nave]=data2cs_event(data,opt.segleng,segshift,epleng,maxfreqbin,para);
     [cs_univ,nave]=data2cs_event(data_univ,opt.segleng,segshift,epleng,maxfreqbin,para);
-    [cs_univ_pc,nave]=data2cs_event(data_univ_pc,opt.segleng,segshift,epleng,maxfreqbin,para);
+    [cs_univ_svd,nave]=data2cs_event(data_univ_svd,opt.segleng,segshift,epleng,maxfreqbin,para);
 
     % compute MIM, ImCoh on the time series averaged across locations and
     % ImCoh on the first PCs
     mim(irun)      =cs2mim(cs(:,:,opt.freqbins(1,:)),na,nb);
     imcoh(irun)    =cs2mim(cs_univ(:,:,opt.freqbins(1,:)),1,1);
-    imcoh_pc(irun) =cs2mim(cs_univ_pc(:,:,opt.freqbins(1,:)),1,1);
+    imcoh_svd(irun) =cs2mim(cs_univ_svd(:,:,opt.freqbins(1,:)),1,1);
 end
 
 mim=mean(mim);
 imcoh=mean(imcoh);
-imcoh_pc=mean(imcoh_pc);
+imcoh_svd=mean(imcoh_svd);
 
 return
 
