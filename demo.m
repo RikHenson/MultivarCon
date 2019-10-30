@@ -153,65 +153,65 @@ vis = 2;
 plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example6.png'),'png')
 
-% %% Seventh example: averaging timepoints (trials) with same stimulus improves RCA
-% fnam = 'Negative correlations induced by the functional mapping; averaging across stimuli of same type';
-% %T = rand(nVoxs)-0.5;
-% T = zeros(nVoxs); for j=1:mVoxs/2; T(j,j)=1; T(j+mVoxs/2,j+mVoxs/2)=-1; end
-% Noise = 1;
-% nStim = 20;
-% nRep  = nTime/nStim;  % Assumes a factor of nTime
-% stimuli = repmat([1:nStim],1,nRep);
-% 
-% cc = 0;
-% C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
-% 
-% X = {}; Y = {};
-% for s=1:nSubj
-%     for r=1:nRuns
-%         X{s}{r} = mvnrnd(zeros(nStim,nVoxs(1)),C);
-%         X{s}{r} = repmat(X{s}{r},nRep,1);  % Repeat same pattern 
-%         Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
-% %        X{g}{r} = X{g}{r} + sigma*randn(nTime,nVoxs(1));  % independent noise
-%     end
-% end
-% 
-% vis = 2;
-% %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
-% [MVconn,MVconn_null] = computeMVconn(X,Y,opt);
-% % plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
-% % saveas(gcf,'Graphics/mvcon_example7a.png','png')
-% rc_orig = mean(MVconn.RCA)-mean(MVconn_null.RCA);
-% 
-% sX = {}; sY = {};
-% for s=1:nSubj
-%     for r=1:nRuns
-%         for stim = 1:nStim
-%             sX{s}{r}(stim,:) = mean(X{s}{r}(find(stimuli==stim),:));
-%             sY{s}{r}(stim,:) = mean(Y{s}{r}(find(stimuli==stim),:));
-%         end
-%     end
-% end
-% 
-% vis = 2;
-% %vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
-% [sMVconn,sMVconn_null] = computeMVconn(sX,sY,opt);
-% % plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
-% % saveas(gcf,'Graphics/mvcon_example7b.png','png')
-% rc_pooled = mean(sMVconn.RCA)-mean(sMVconn_null.RCA);
-% fprintf('RC from the original trial x trial RDMs: \t: %.2f\n',rc_orig)
-% fprintf('RC from the pooled data i.e. stim x stim RDMs: \t: %.2f\n',rc_pooled)
-% 
-% meanvl(1) = mean(MVconn.RCA - MVconn_null.RCA);
-% spread(1) = std(MVconn.RCA - MVconn_null.RCA);
-% meanvl(2) = mean(sMVconn.RCA - sMVconn_null.RCA);
-% spread(2) = std(sMVconn.RCA - sMVconn_null.RCA);
-% figure('Color','w')
-% c = categorical({'1 RCA-orig','2 RCA-pooled'});
-% bar(c,meanvl,.5,'FaceColor',[0.75,0.75,0.75])
-% hold on
-% errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
-% ylabel('Mean +/- SD')
-% saveas(gcf,fullfile('Graphics','mvcon_example7.png'),'png')
+%% Seventh example: averaging timepoints (trials) with same stimulus improves RCA
+fnam = 'Negative correlations induced by the functional mapping; averaging across stimuli of same type';
+%T = rand(nVoxs)-0.5;
+T = zeros(nVoxs); for j=1:mVoxs/2; T(j,j)=1; T(j+mVoxs/2,j+mVoxs/2)=-1; end
+Noise = 1;
+nStim = 20;
+nRep  = nTime/nStim;  % Assumes a factor of nTime
+stimuli = repmat([1:nStim],1,nRep);
+
+cc = 0;
+C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
+
+X = {}; Y = {};
+for s=1:nSubj
+    for r=1:nRuns
+        X{s}{r} = mvnrnd(zeros(nStim,nVoxs(1)),C);
+        X{s}{r} = repmat(X{s}{r},nRep,1);  % Repeat same pattern 
+        Y{s}{r} = X{s}{r}*T + sigma*randn(nTime,nVoxs(2));
+%        X{g}{r} = X{g}{r} + sigma*randn(nTime,nVoxs(1));  % independent noise
+    end
+end
+
+vis = 2;
+%vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
+[MVconn,MVconn_null] = computeMVconn(X,Y,opt);
+% plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
+% saveas(gcf,'Graphics/mvcon_example7a.png','png')
+rc_orig = mean(MVconn.RCA)-mean(MVconn_null.RCA);
+
+sX = {}; sY = {};
+for s=1:nSubj
+    for r=1:nRuns
+        for stim = 1:nStim
+            sX{s}{r}(stim,:) = mean(X{s}{r}(find(stimuli==stim),:));
+            sY{s}{r}(stim,:) = mean(Y{s}{r}(find(stimuli==stim),:));
+        end
+    end
+end
+
+vis = 2;
+%vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
+[sMVconn,sMVconn_null] = computeMVconn(sX,sY,opt);
+% plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
+% saveas(gcf,'Graphics/mvcon_example7b.png','png')
+rc_pooled = mean(sMVconn.RCA)-mean(sMVconn_null.RCA);
+fprintf('RC from the original trial x trial RDMs: \t: %.2f\n',rc_orig)
+fprintf('RC from the pooled data i.e. stim x stim RDMs: \t: %.2f\n',rc_pooled)
+
+meanvl(1) = mean(MVconn.RCA - MVconn_null.RCA);
+spread(1) = std(MVconn.RCA - MVconn_null.RCA);
+meanvl(2) = mean(sMVconn.RCA - sMVconn_null.RCA);
+spread(2) = std(sMVconn.RCA - sMVconn_null.RCA);
+figure('Color','w')
+c = categorical({'1 RCA-orig','2 RCA-pooled'});
+bar(c,meanvl,.5,'FaceColor',[0.75,0.75,0.75])
+hold on
+errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
+ylabel('Mean +/- SD')
+saveas(gcf,fullfile('Graphics','mvcon_example7.png'),'png')
 
 %% Eighth example: multivariate lagged interaction (where lagged MV-Conn metric works better)
 fnam = 'Multivariate lagged interaction';
@@ -251,5 +251,26 @@ vis = [1 2 1 2];
 [MVconn,MVconn_null] = computeMVconn(X,Y,opt);
 plotmv(fnam,T,Ca,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example8.png'),'png')
+
+%% Nineth example: model-based RCA gives different results to direct RCA
+clear;clc
+fnam = 'model-based vs. direct RCA';
+% the idea here is that the correlation of RDMs to one model can be very
+% different from the correlation of RDMs.
+k = 12;
+ndissim = nchoosek(k,2);
+T = @(theta) kron([cosd(theta),sind(theta);-sind(theta),cosd(theta)],eye(ndissim/2)); % rotation in the dissimilarity space
+model = zscore(pdist(randn(k)))';
+ang = 70;% this needs to be > 45 for the example to work
+ds_roi1 = T(ang)*model;
+ds_roi2 = T(-ang)*model;
+rc_model_roi1 = corr(ds_roi1,model);
+rc_model_roi2 = corr(ds_roi2,model);
+rc_direct = corr(ds_roi1,ds_roi2);
+c = categorical({'1 RCA-model2ROI1','2 RCA-model2ROI2','3 RCA-ROI12ROI2'});
+figure('Color','w')
+bar(c,[rc_model_roi1,rc_model_roi2,rc_direct],.5,'FaceColor',[0.75,0.75,0.75])
+ylim([-1 1]);ylabel('RCA')
+saveas(gcf,fullfile('Graphics','mvcon_example9.png'),'png')
 
 return
