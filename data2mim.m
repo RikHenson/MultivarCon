@@ -79,7 +79,7 @@ for f=1:F
     tol2=max(size(real(sb(:,:,f))))*norm(real(sb(:,:,f)))*10^(-10);
     mim(1,2)=mim(1,2)+trace(pinv(real(sa(:,:,f)),tol1)*imag(sab(:,:,f))*pinv(real(sb(:,:,f)),tol2)*(imag(sab(:,:,f))'));
 end
-mim=mim(1,2)/(na*F);
+mim=mim(1,2)/(min([na,nb])*F);
 
 return
 
