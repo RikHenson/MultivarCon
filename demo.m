@@ -62,10 +62,10 @@ vis = 2;
 plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example2.png'),'png')
 
-%% Third example: anticorrelation in ROI2 induced by the functional mapping (where MVPD and dCor work better)
-fnam = 'Negative correlations induced by the functional mapping';
-%T = rand(nVoxs)-0.5;
-T = zeros(nVoxs); for j=1:mVoxs/2; T(j,j)=1; T(j+mVoxs/2,j+mVoxs/2)=-1; end
+%% Third example: multivariate functional mapping and uncorrelated voxel activities
+fnam = 'Multivariate functional mapping and uncorrelated voxel activities';
+T = randn(nVoxs);
+T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
 cc = 0;
 C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 X = {}; Y = {};
@@ -77,7 +77,7 @@ for s=1:nSubj
         Y{s}{r} = Y{s}{r} + sigma*randn(nTime,nVoxs(2));
     end
 end
-vis = [1 nVoxs(1)/2+1 1 nVoxs(2)/2+1];
+vis = 2;
 [MVconn,MVconn_null] = computeMVconn(X,Y,opt);
 plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example3.png'),'png')
