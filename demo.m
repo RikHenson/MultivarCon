@@ -10,7 +10,7 @@ nTime = 200;        % number of time points
 nVoxs = [50 60];    % number of voxels in ROI1 and ROI2
 mVoxs = min(nVoxs);
 nRuns = 2;          % number of runs. MVPD requires at least 2 runs.
-sigma = 1;          % std of Noise in ROI2
+sigma = 1;          % std of Noise in ROI1 and ROI2
 
 % Optional parameters
 opt.method = 'svd_exvar'; % reduce dimensions based on percent variance
