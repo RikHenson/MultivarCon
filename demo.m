@@ -22,8 +22,8 @@ opt.nRandomisation = 20; % Needs to be >1 to get more stable estimates of null d
 
 rng('default')
 
-%% First example: positively correlated voxel activities within ROI1 (where both UV-conn and MV-conn metrics work)
-fnam = 'Positively correlated voxel activities within a ROI';
+%% First example: positively correlated activities within ROI1 and one-to-one voxel mapping
+fnam = 'Positively correlated activities within ROI1 and one-to-one voxel mapping';
 %T = rand(nVoxs);
 T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
 cc = 0.5;
@@ -42,8 +42,8 @@ vis = [1 2 1 2];
 plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example1.png'),'png')
 
-%% Second example: anticorrelated voxel activities within ROI1 (where MV-conn metrics work better)
-fnam = 'Negatively correlated voxel activities within a ROI';
+%% Second example: anticorrelated activities within ROI1 and one-to-one voxel mapping
+fnam = 'Anticorrelated activities within ROI1 and one-to-one voxel mapping';
 %T = rand(nVoxs);
 T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
 cc = 0.9;
@@ -62,8 +62,8 @@ vis = 2;
 plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example2.png'),'png')
 
-%% Third example: multivariate functional mapping and uncorrelated voxel activities
-fnam = 'Multivariate functional mapping and uncorrelated voxel activities';
+%% Third example: uncorrelated activities and multivariate mapping
+fnam = 'Uncorrelated activities and multivariate mapping';
 T = randn(nVoxs);
 T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
 cc = 0;
@@ -82,8 +82,8 @@ vis = 2;
 plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example3.png'),'png')
 
-%% Fourth example: run-dependent linear mapping (within-run measures work)
-fnam = 'Run-dependent linear connectivity';
+%% Fourth example: Multivariate mapping that changes across runs
+fnam = 'Multivariate mapping that changes across runs';
 cc = 0;
 C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 % C = cov(rand(nVoxs(1))); %we can use a general cov matrix here
@@ -102,8 +102,8 @@ vis = 2;
 plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example4.png'),'png')
 
-%% Fifth example: the functional mapping is nonlinear (dCor works best)
-fnam = 'Nonlinear connectivity';
+%% Fifth example: nonlinear mapping
+fnam = 'Nonlinear mapping';
 %T = rand(nVoxs);
 T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
 cc = 0.5; % cannot be zero now
@@ -127,7 +127,7 @@ vis = 2;
 plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example5.png'),'png')
 
-%% Sixth example: the presence of structured noise in ROI2 (where RCA works best)
+%% Sixth example: structured noise in ROI2
 fnam = 'Structured Noise in ROI2'; 
 %T = rand(nVoxs);
 T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
@@ -153,8 +153,68 @@ vis = 2;
 plotmv(fnam,T,C,X,Y,MVconn,MVconn_null,vis)
 saveas(gcf,fullfile('Graphics','mvcon_example6.png'),'png')
 
-%% Seventh example: averaging timepoints (trials) with same stimulus improves RCA
-fnam = 'Negative correlations induced by the functional mapping; averaging across stimuli of same type';
+%% Seventh example: multivariate lagged interaction
+fnam = 'Multivariate lagged interaction';
+
+% Parameter settings
+nTime = 15360;      % number of time points, e.g. 15360 is equivalent to 60 seconds 
+                    % acquisition if the resolution is 256 Hz
+nVoxs = [12 10];    % number of locations/voxels in ROI1 and ROI2
+
+opt.segleng=256;    % length (in bins) of the segment used for the cross-spectrum computation,
+                    % e.g. 256 is equivalent to 1 second segment with a resolution of 256 Hz
+opt.freqbins=31:71; % low gamma band, i.e. from 30 Hz to 70 Hz
+
+delaYin= 10;       % delay in bins of the interaction between the regions,
+                    % e.g. if the resolution is 256 Hz and the delaYin is 10, 
+                    % the actual delay between a and b is delaYin/(256 Hz)= 40ms 
+
+% functional mapping (from ROI1 to ROI2)                 
+T=randn(nVoxs);
+
+cc = 0;
+Ca = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
+
+X = {}; Y = {};
+for s=1:nSubj
+    for r=1:nRuns
+
+        % lagged multivariate interaction
+        X{s}{r}=mvnrnd(zeros(nTime+delaYin,nVoxs(1)),Ca);
+        Y{s}{r}=(X{s}{r}(delaYin+1:end,:)*T)+sigma*randn(nTime,nVoxs(2));
+        X{s}{r}=X{s}{r}(1:nTime,:)+sigma*randn(nTime,nVoxs(1));
+
+    end
+end
+
+vis = [1 2 1 2];
+[MVconn,MVconn_null] = computeMVconn(X,Y,opt);
+plotmv(fnam,T,Ca,X,Y,MVconn,MVconn_null,vis)
+saveas(gcf,fullfile('Graphics','mvcon_example8.png'),'png')
+
+%% Eighth example: model-based RCA and direct RCA
+clear;clc
+fnam = 'Model-based RCA and direct RCA';
+% the idea here is that the correlation of RDMs to one model can be very
+% different from the correlation of RDMs.
+k = 12;
+ndissim = nchoosek(k,2);
+T = @(theta) kron([cosd(theta),sind(theta);-sind(theta),cosd(theta)],eye(ndissim/2)); % rotation in the dissimilarity space
+model = zscore(pdist(randn(k)))';
+ang = 70;% this needs to be > 45 for the example to work
+ds_roi1 = T(ang)*model;
+ds_roi2 = T(-ang)*model;
+rc_model_roi1 = corr(ds_roi1,model);
+rc_model_roi2 = corr(ds_roi2,model);
+rc_direct = corr(ds_roi1,ds_roi2);
+c = categorical({'1 RCA-model2ROI1','2 RCA-model2ROI2','3 RCA-ROI12ROI2'});
+figure('Color','w')
+bar(c,[rc_model_roi1,rc_model_roi2,rc_direct],.5,'FaceColor',[0.75,0.75,0.75])
+ylim([-1 1]);ylabel('RCA')
+saveas(gcf,fullfile('Graphics','mvcon_example9.png'),'png')
+
+%% Ninth example: averaging timepoints (trials) with same stimulus improves RCA
+fnam = 'Averaging timepoints (trials) with same stimulus improves RCA';
 %T = rand(nVoxs)-0.5;
 T = zeros(nVoxs); for j=1:mVoxs/2; T(j,j)=1; T(j+mVoxs/2,j+mVoxs/2)=-1; end
 Noise = 1;
@@ -213,64 +273,5 @@ errorbar(c,meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
 ylabel('Mean +/- SD')
 saveas(gcf,fullfile('Graphics','mvcon_example7.png'),'png')
 
-%% Eighth example: multivariate lagged interaction (where lagged MV-Conn metric works better)
-fnam = 'Multivariate lagged interaction';
-
-% Parameter settings
-nTime = 15360;      % number of time points, e.g. 15360 is equivalent to 60 seconds 
-                    % acquisition if the resolution is 256 Hz
-nVoxs = [12 10];    % number of locations/voxels in ROI1 and ROI2
-
-opt.segleng=256;    % length (in bins) of the segment used for the cross-spectrum computation,
-                    % e.g. 256 is equivalent to 1 second segment with a resolution of 256 Hz
-opt.freqbins=31:71; % low gamma band, i.e. from 30 Hz to 70 Hz
-
-delaYin= 10;       % delay in bins of the interaction between the regions,
-                    % e.g. if the resolution is 256 Hz and the delaYin is 10, 
-                    % the actual delay between a and b is delaYin/(256 Hz)= 40ms 
-
-% functional mapping (from ROI1 to ROI2)                 
-T=randn(nVoxs);
-
-cc = 0;
-Ca = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
-
-X = {}; Y = {};
-for s=1:nSubj
-    for r=1:nRuns
-
-        % lagged multivariate interaction
-        X{s}{r}=mvnrnd(zeros(nTime+delaYin,nVoxs(1)),Ca);
-        Y{s}{r}=(X{s}{r}(delaYin+1:end,:)*T)+sigma*randn(nTime,nVoxs(2));
-        X{s}{r}=X{s}{r}(1:nTime,:)+sigma*randn(nTime,nVoxs(1));
-
-    end
-end
-
-vis = [1 2 1 2];
-[MVconn,MVconn_null] = computeMVconn(X,Y,opt);
-plotmv(fnam,T,Ca,X,Y,MVconn,MVconn_null,vis)
-saveas(gcf,fullfile('Graphics','mvcon_example8.png'),'png')
-
-%% Nineth example: model-based RCA gives different results to direct RCA
-clear;clc
-fnam = 'model-based vs. direct RCA';
-% the idea here is that the correlation of RDMs to one model can be very
-% different from the correlation of RDMs.
-k = 12;
-ndissim = nchoosek(k,2);
-T = @(theta) kron([cosd(theta),sind(theta);-sind(theta),cosd(theta)],eye(ndissim/2)); % rotation in the dissimilarity space
-model = zscore(pdist(randn(k)))';
-ang = 70;% this needs to be > 45 for the example to work
-ds_roi1 = T(ang)*model;
-ds_roi2 = T(-ang)*model;
-rc_model_roi1 = corr(ds_roi1,model);
-rc_model_roi2 = corr(ds_roi2,model);
-rc_direct = corr(ds_roi1,ds_roi2);
-c = categorical({'1 RCA-model2ROI1','2 RCA-model2ROI2','3 RCA-ROI12ROI2'});
-figure('Color','w')
-bar(c,[rc_model_roi1,rc_model_roi2,rc_direct],.5,'FaceColor',[0.75,0.75,0.75])
-ylim([-1 1]);ylabel('RCA')
-saveas(gcf,fullfile('Graphics','mvcon_example9.png'),'png')
 
 return
