@@ -65,7 +65,7 @@ saveas(gcf,fullfile('Graphics','mvcon_example2.png'),'png')
 %% Third example: uncorrelated activities and multivariate mapping
 fnam = 'Uncorrelated activities and multivariate mapping';
 T = randn(nVoxs);
-T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
+%T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
 cc = 0;
 C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
 X = {}; Y = {};
