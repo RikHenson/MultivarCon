@@ -73,17 +73,16 @@ X = [
     ];
 
 Y = [
-     3  -3
-    -3   3
-    -1/2 0
-     0 1/2
+     -3  -3
+      3   3
+     -2  -2
+      1   1
 ];
 
 corr(mean(X,2),mean(Y,2))
 X1=dimreduction(X,'svd_ndir',options);
 Y1=dimreduction(Y,'svd_ndir',options);
 corr(X1,Y1) 
-%corr(sum(X,2),diff(Y,1,2))  % equivalent to SVD, ie projecting along y=-x
 
 DX = pdist(X,'euclidean');
 DY = pdist(Y,'euclidean');
