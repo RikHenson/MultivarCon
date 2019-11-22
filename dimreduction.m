@@ -1,18 +1,30 @@
-function [data,V,SV]=dimreduction(data,method,options);
+function [data,V,SV]=dimreduction(data,method,options)
 % calculates the dimensionality reducted time series by using either the
 % singular value decomposition or the averaging process across the voxels.
-% input:
-% data:       matrix of dimension Tx(n)
-% method:     'average' is for averaging across voxels, 'svd_ndir' is 
-%             for the first N svd directions while 'svd_exvar' is for the directions 
-%             which allow to explain the percentage of variance indicated by
-%             the input parameter (percentage).
-% options:    percentage or number. Percentage is in the range [0,100], e.g. 90 is for explaining the
-%             90% of variance. Number is an integer in the range [1,n]
-% Alessio Basti 
-% version: 29/07/2019
+% input: data:       
+%             matrix of dimension Tx(n), where T is the number of
+%             time-points or conditions and n is the number of voxels.
+% method:     
+%             'average' is for averaging across voxels, 'svd_ndir' is
+%             for the first N svd directions while 'svd_exvar' is for the
+%             directions which allow to explain the percentage of variance
+%             indicated by the input parameter (percentage).
+% options:    
+%             percentage or number. Percentage is in the range [0,100],
+%             e.g. 90 is for explaining the 90% of variance. Number is an
+%             integer in the range [1,n] (options.percentage needs to be
+%             set when method is set to 'svd_ndir' and options.percentage
+%             needs to be set for 'svd_exvar') if options.meancorrection is
+%             set to 1 then the input data would be centered
+%             (mean-corrected across the second dimension, e.g. voxel)
+%             before pca is applied.
+% Alessio Basti version: 29/07/2019
 
-if strcmp(method,'svd_ndir')==1
+if ~isfield(options,'meancorrection')
+    options.meancorrection  = 1;% overwritten to 0 for PCA FC
+end
+
+if strcmp(method,'svd_ndir')==1 
     
     [V newdata SV] = pca(data,'Centered',options.meancorrection);
     
@@ -25,17 +37,7 @@ if strcmp(method,'svd_ndir')==1
 elseif strcmp(method,'svd_exvar')==1
      
     [V newdata SV] = pca(data,'Centered',options.meancorrection);
-
-    index=0;
-    i=1;
-    while index==0
-        varapp(i)=var(newdata(:,i));
-        sumvar(i)=sum(varapp(1:i));
-        if(sumvar(i)>(options.percentage/100)*sum(SV))
-            index=i;
-        end
-        i=i+1;
-    end
+    index = find(cumsum(SV)/sum(SV)>=options.percentage/100,1);
     data=newdata(:,1:index);
     V=V(:,1:index);
     SV=SV(1:index); 
