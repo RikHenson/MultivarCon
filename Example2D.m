@@ -21,8 +21,8 @@ figure,
 subplot(1,2,1); title('ROI1')
 hold on, for t=1:size(X,1); t = text(X(t,1),X(t,2),num2str(t),'FontSize',12); end; axis square
 axis([-4 4 -4 4])%, set(gca,'XAxisLocation','origin','YAxisLocation','origin','XTick',[],'YTick',[]), 
-xlabel('Voxel 1')
-ylabel('Voxel 2')
+xlabel('Activity of voxel 1')
+ylabel('Activity of voxel 2')
 line([0 0], [-4 4],'Color','red','LineStyle',':','LineWidth',0.5)
 line([-4 4], [0 0],'Color','red','LineStyle',':','LineWidth',0.5)
 subplot(1,2,2); title('ROI2')
@@ -118,8 +118,8 @@ print -dpng 'MV1.png'
 % RDM representation
 figure,
 subplot(1,2,1); imagesc(squareform(DX)), colormap('gray'), set(gca,'XTick',[1:4]), set(gca,'YTick',[1:4]), axis square, title('ROI1')
-xlabel('Voxel 1')
-ylabel('Voxel 2')
+xlabel('Time points')
+ylabel('Time points')
 subplot(1,2,2); imagesc(squareform(DY)), colormap('gray'), set(gca,'XTick',[1:4]), set(gca,'YTick',[1:4]), axis square, title('ROI2')
-xlabel('Voxel 1')
-ylabel('Voxel 2')
+xlabel('Time points')
+ylabel('Time points')
