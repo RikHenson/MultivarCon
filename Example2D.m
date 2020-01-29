@@ -1,4 +1,4 @@
-cd /home/rh01/GitHub/MultivarCon
+
 options.number = 1;
 options.meancorrection = 0;
 
@@ -32,7 +32,7 @@ xlabel('Activity of voxel 1')
 ylabel('Activity of voxel 2')
 line([0 0], [-4 4],'Color','red','LineStyle',':','LineWidth',0.5)
 line([-4 4], [0 0],'Color','red','LineStyle',':','LineWidth',0.5)
-print -dpng 'UVmean.png'
+print -dpng 'Graphics/UVmean.png'
 
 
 %% When Pearson of SVD works
@@ -60,7 +60,7 @@ xlabel('Activity of voxel 1')
 ylabel('Activity of voxel 2')
 line([0 0], [-4 4],'Color','red','LineStyle',':','LineWidth',0.5)
 line([-4 4], [0 0],'Color','red','LineStyle',':','LineWidth',0.5)
-print -dpng 'UVsvd.png'
+print -dpng 'Graphics/UVsvd.png'
 
 
 %% When MV needed, because data not dominated by one direction 
@@ -113,7 +113,7 @@ xlabel('First combination of voxel activities')
 ylabel('Second combination of voxel activities')
 line([0 0], [-4 4],'Color','red','LineStyle',':','LineWidth',0.5)
 line([-4 4], [0 0],'Color','red','LineStyle',':','LineWidth',0.5)
-print -dpng 'MV1.png'
+print -dpng 'Graphics/MV1.png'
 
 % RDM representation
 figure,
