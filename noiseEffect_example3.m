@@ -59,8 +59,9 @@ s4=shadedErrorBar(gammas,y(:,4),se(:,4),'c');
 s5=shadedErrorBar(gammas,y(:,5),se(:,5),'r');
 s6=shadedErrorBar(gammas,y(:,6),se(:,6),'g');
 legend([s1.mainLine s2.mainLine s3.mainLine s4.mainLine s5.mainLine s6.mainLine],methods,'Location','NorthWest');
-xlabel('SNR (gamma)')
+xlabel('Signal:Noise Ratio')
 ylabel('Normalised Performance')
 set(gca,'FontSize',18)
+set(gca,'XTick',[0 0.5 1],'XTickLabel',[0 1 Inf])
 saveas(gcf,fullfile('Graphics','mvcon_example3_noise.png'),'png')
 
