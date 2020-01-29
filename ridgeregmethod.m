@@ -3,9 +3,9 @@ function [Ttilde,gof]=ridgeregmethod(X,Y,lambdas);
 % via a cross-validated version of the ridge regression method.
 % 
 % INPUT
-% X:         time series for the ROI1
+% X:         time series for the ROI1 (time x voxel matrix)
 % Y:         time series for the ROI2
-% lambdas:   set of possible regulariation parameter
+% lambdas:   set of possible regulariation parameters
 % OUTPUT
 % Ttilde:    estimated transformation
 % gof:       goodness-of-fit

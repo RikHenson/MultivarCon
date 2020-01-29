@@ -1,16 +1,50 @@
 function [MVconn,MVconn_null] = computeMVconn(X,Y,opt)
-
+% this is mainly a wrapper function: given the input MV patterns for 2
+% regions, it computes MVPD, LPRD, dCor, RC and MIM and also FC and FC_SVD
+% the function also simulates the null hypothesis of no functional
+% connectivity by randomly shuffling the time points (first component) in
+% each run of every subject. This assumes no temporal autocorrelation in
+% data and would not be appropriate for temporally smooth data.
+% results from permuted data are returned in MVconn_null, which contains
+% one null number per subject per iteration. The number of iterations are
+% specified in opt.nRandomisation.
+% 
+% inputs:
+%        X: a cell array, one entry per subject. X{s} is the data from
+%        subject "s" and contains mutiple cell arrays, one per run. For
+%        example X{2}{1} is the data from run1 of subject2. The data is 
+%        time x voxels.
+%        Y : the same as X for the second region
+% 
+% outputs:
+%        MVconn: contains the following fields:
+%               FC, FCSVD, MVPD, LPRD, dCor , RCA.
+%               each is a column vector with one number per subject.
+%        MVconn_null: contains the same fields as MVconn. each would be a
+%        matrix with size of nSubjects x nRandomisations.
+% Hamed Nili
 if ~isfield(opt,'nRandomisation')
     opt.nRandomisation = 1;
+end
+if ~isfield(opt,'zscore')
+    opt.zscore = 0;
 end
 
 nSub = length(X);
 
-% Calculate connectivity on data given
+% zscore patterns within each run if opt.zscore is set in the options
+if opt.zscore
+    for r = 1:numel(X)
+        X{r} = zscore(X{r},0,2);
+        Y{r} = zscore(Y{r},0,2);
+    end
+end
+
+% Calculate connectivity on given data
 for s=1:nSub
     if ~isfield(opt,'segleng') 
         [mvpd(s,1),lprd(s,1),fc(s,1),fc_svd(s,1)] = data2mvpd_lprd_fc(X{s},Y{s},opt); 
-        [dcor(s,1),dcor_u(s,1)] = data2dCor(X{s},Y{s},opt);
+        [dcor(s,1),dcor_u(s,1)] = data2dCor(X{s},Y{s});
         [rc(s,1),~] = data2rc(X{s},Y{s},'Correlation');
     else
         [mim(s,1),imcoh(s,1),imcoh_svd(s,1)] = data2mim(X{s},Y{s},opt);
@@ -42,7 +76,7 @@ if opt.nRandomisation == 1 %if only one, then don't bother with parfor like belo
         end
         if ~isfield(opt,'segleng')
             [bmvpd(s,iter),blprd(s,iter),bfc(s,iter),bfc_svd(s,iter)] = data2mvpd_lprd_fc(bX,bY,opt);
-            [bdcor(s,iter),bdcor_u(s,iter)] = data2dCor(bX,bY,opt);
+            [bdcor(s,iter),bdcor_u(s,iter)] = data2dCor(bX,bY);
             [brc(s,iter),~] = data2rc(bX,bY,'Correlation');
         else
             [bmim(s,iter),bimcoh(s,iter),bimcoh_svd(s,iter)] = data2mim(bX,bY,opt);
@@ -59,7 +93,7 @@ elseif opt.nRandomisation > 1
             end
             if ~isfield(opt,'segleng')
                 [tmp_bmvpd{iter},tmp_blprd{iter},tmp_bfc{iter},tmp_bfc_svd{iter}] = data2mvpd_lprd_fc(bX,bY,opt);
-                [tmp_bdcor{iter},~] = data2dCor(bX,bY,opt);
+                [tmp_bdcor{iter},~] = data2dCor(bX,bY);
                 [tmp_brc{iter},~] = data2rc(bX,bY,'Correlation');
             else
                 [tmp_bmim{iter},tmp_bimcoh{iter},tmp_bimcoh_svd{iter}] = data2mim(bX,bY,opt);

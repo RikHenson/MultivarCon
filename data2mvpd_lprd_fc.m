@@ -23,51 +23,47 @@ function [mvpd,lprd,fc,fc_svd]=data2mvpd_lprd_fc(X,Y,options);
 % Alessio Basti
 % version: 29/07/2019
 
-for irun=1:length(X)
-    %X_zs{irun} = zscore(X{irun},0,2);
-    %Y_zs{irun} = zscore(Y{irun},0,2);
-    X_zs{irun} = X{irun};
-    Y_zs{irun} = Y{irun};
-    % get the voxel-average ts
-    ts_a{irun} = mean(X{irun},2);
-    ts_b{irun} = mean(Y{irun},2);
+for r=1:length(X)
+    % get the voxel-average time-series
+    ts_a{r} = mean(X{r},2);
+    ts_b{r} = mean(Y{r},2);
     % compute the pearson correlation
-    fc_app(irun) = corr(ts_a{irun},ts_b{irun});
+    fc_app(r) = corr(ts_a{r},ts_b{r});
     
     opt = options;
     opt.number = 1; % override user arguments for this special case of using SVD to reduce dimension to 1
     opt.meancorrection = 0; % so can return mean over voxels if dominant spatial mode
-    [C1_a{irun}]=dimreduction(X{irun},'svd_ndir',opt);
-    [C1_b{irun}]=dimreduction(Y{irun},'svd_ndir',opt);
-    fc_SVs_app(irun) = abs(corr(C1_a{irun},C1_b{irun})); % abs because sign of first SV arbitrary
+    [C1_a]=dimreduction(X{r},'svd_ndir',opt);
+    [C1_b]=dimreduction(Y{r},'svd_ndir',opt);
+    fc_SVs_app(r) = abs(corr(C1_a,C1_b)); % abs because sign of first SV arbitrary
 end
 
 method=zeros(2,1);
-for jmet=1:1
+for jmet=1:1 % do we need this for loop? can't we just do jmet = 1?
     if(jmet==1)
-        X_app=X_zs;
-        Y_app=Y_zs;
+        X_app=X;
+        Y_app=Y;
     else
         X_app=ts_a;
         Y_app=ts_b;
     end
-    for irun=1:length(X_app)
+    for r=1:length(X_app)
         
         % let us divide the training set from the testing set
         Xtrain=X_app;
         Ytrain=Y_app;
-        Xtrain{irun}=[];
-        Ytrain{irun}=[];
+        Xtrain{r}=[];
+        Ytrain{r}=[];
         Xtrain=vertcat(Xtrain{:});
         Ytrain=vertcat(Ytrain{:});
-        Xtest=X_app{irun};
-        Ytest=Y_app{irun};
+        Xtest=X_app{r};
+        Ytest=Y_app{r};
         
         if strcmp(options.method,'full')==1
             % linear model estimate (ridge regression)
             [Ttilde,~]=ridgeregmethod(Xtrain,Ytrain,options.regularisation);
             
-            % OLF on full time series it is not recommended when the number of time
+            % OLS on full time series is not recommended when the number of time
             % points is lower than the number of voxels in X
             %Ttilde=Ytrain'*Xtrain*inv(Xtrain'*Xtrain);
             
@@ -97,13 +93,13 @@ for jmet=1:1
         end
         
         % linear model estimate (ridge regression)
-        zX{1}=zscore(X{irun},0,2);
-        zY{1}=zscore(Y{irun},0,2);
+        zX{1}=zscore(X{r},0,2);
+        zY{1}=zscore(Y{r},0,2);
         [Ttilde,~]=ridgeregmethod(zX{1},zY{1},options.regularisation);
         zY_for{1}=zX{1}*Ttilde';
         
         % correlation between the estimated and the actual RDM for the ROI2
-        [lprd(irun,jmet),~] = data2rc(zY,zY_for,'Correlation');
+        [lprd(r,jmet),~] = data2rc(zY,zY_for,'Correlation');
     end
 end
 

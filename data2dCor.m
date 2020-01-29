@@ -1,4 +1,4 @@
-function [dCor,dCor_u,fc] = data2dCor(X,Y,opt)
+function [dCor,dCor_u] = data2dCor(X,Y)
 % calculates the multivariate distance correlation between two multivariate
 % time series (Geerlings et al. 2016, NI)
 %
@@ -12,11 +12,11 @@ function [dCor,dCor_u,fc] = data2dCor(X,Y,opt)
 % between all pairs of timepoints. These matrices will be U-centered. This
 % operation ensures that the correlation between matrices are not biased by
 % the number of voxels in ROIs. the output is the correlation between the
-% two matrices. Hamed Nili, based on the code available at
-% http://imaging.mrc-cbu.cam.ac.uk/imaging/Geerligs_DistCor
+% two matrices. 
 % Furthermore, it computes the correlation between the centered distance
 % matrices obtained from the UV time courses (voxel/electrode averaged time
-% series). D-centering is used for computing the UV distance correlation.
+% series,i.e. dCor_u). 
+% D-centering is used for computing the UV distance correlation.
 % Hamed Nili, based on the codes available at 
 % http://imaging.mrc-cbu.cam.ac.uk/imaging/Geerligs_DistCor
 % the function returns the run-averaged values.
@@ -28,22 +28,11 @@ nruns = numel(X); % number of runs
 % zscore the data (across voxels in each ROI and for each run)
 for r=1:nruns
     
-    if opt.zscore
-        X_zs = zscore(X{r},0,2);
-        Y_zs = zscore(Y{r},0,2);
-    else
-        X_zs = X{r};
-        Y_zs = Y{r};
-    end
-    
     % get the voxel-average ts
     ts_a = mean(X{r},2);ts_b = mean(Y{r},2);
-       
-    % compute the pearson correlation
-    [r_uv(r),~] = corr(ts_a,ts_b);
     
     % MV distance correlation (U-centering)
-    dcor(r) = dcor_uc(X_zs,Y_zs);
+    dcor(r) = dcor_uc(X{r},Y{r});
     
     % UV distance correlation (D-centering)
     dcor_u(r) = dcor_dc(ts_a,ts_b);
@@ -51,7 +40,6 @@ end
 
 dCor_u=mean(dcor_u);% run-averaged values
 dCor=mean(dcor); % run-averaged values
-fc = mean(r_uv);
 
     function [R] = dcor_dc(X,Y)
         % [R] = dcor_dc(X,Y)
