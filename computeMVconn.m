@@ -18,9 +18,9 @@ function [MVconn,MVconn_null] = computeMVconn(X,Y,opt)
 % 
 % outputs:
 %        MVconn: contains the following fields:
-%               FC, FCSVD, MVPD, LPRD, dCor , RCA.
+%               FC, FCSVD, MVPD, LPRD, dCor, RCA (MIM, ImCohSVD, MVLagCoh, LagCohSVD)
 %               each is a column vector with one number per subject.
-%        MVconn_null: contains the same fields as MVconn. each would be a
+%        MVconn_null: contains the same fields as MVconn. Each would be a
 %        matrix with size of nSubjects x nRandomisations.
 % Hamed Nili
 if ~isfield(opt,'nRandomisation')
@@ -47,21 +47,22 @@ for s=1:nSub
         [dcor(s,1),dcor_u(s,1)] = data2dCor(X{s},Y{s});
         [rc(s,1),~] = data2rc(X{s},Y{s},'Correlation');
     else
-        [mim(s,1),imcoh(s,1),imcoh_svd(s,1)] = data2mim(X{s},Y{s},opt);
+        [mim(s,1),imcoh_svd(s,1),mvlagcoh(s,1),lagcoh_svd(s,1)] = data2lagconn(X{s},Y{s},opt);
     end
 end
 
 % Calculate connectivity when X and Y independent random noise (since
 % some connectivity measures, eg dCor, not bounded by 0 or -1)
-bmvpd      = NaN(nSub,opt.nRandomisation);
-blprd      = NaN(nSub,opt.nRandomisation);
-bfc        = NaN(nSub,opt.nRandomisation);
-bfc_svd    = NaN(nSub,opt.nRandomisation);
-bdcor      = NaN(nSub,opt.nRandomisation);
-brc        = NaN(nSub,opt.nRandomisation);
-bmim       = NaN(nSub,opt.nRandomisation);
-bimcoh     = NaN(nSub,opt.nRandomisation);
-bimcoh_svd = NaN(nSub,opt.nRandomisation);
+bmvpd       = NaN(nSub,opt.nRandomisation);
+blprd       = NaN(nSub,opt.nRandomisation);
+bfc         = NaN(nSub,opt.nRandomisation);
+bfc_svd     = NaN(nSub,opt.nRandomisation);
+bdcor       = NaN(nSub,opt.nRandomisation);
+brc         = NaN(nSub,opt.nRandomisation);
+bmim        = NaN(nSub,opt.nRandomisation);
+bimcoh_svd  = NaN(nSub,opt.nRandomisation);
+bmvlagcoh   = NaN(nSub,opt.nRandomisation);
+blagcoh_svd = NaN(nSub,opt.nRandomisation);
 
 if opt.nRandomisation == 1 %if only one, then don't bother with parfor like below
     if nSub < 20
@@ -79,7 +80,7 @@ if opt.nRandomisation == 1 %if only one, then don't bother with parfor like belo
             [bdcor(s,iter),bdcor_u(s,iter)] = data2dCor(bX,bY);
             [brc(s,iter),~] = data2rc(bX,bY,'Correlation');
         else
-            [bmim(s,iter),bimcoh(s,iter),bimcoh_svd(s,iter)] = data2mim(bX,bY,opt);
+            [bmim(s,iter),bimcoh_svd(s,iter),bmvlagcoh(s,iter),blagcoh_svd(s,iter)] = data2lagconn(bX,bY,opt);
         end
     end
 elseif opt.nRandomisation > 1
@@ -96,7 +97,7 @@ elseif opt.nRandomisation > 1
                 [tmp_bdcor{iter},~] = data2dCor(bX,bY);
                 [tmp_brc{iter},~] = data2rc(bX,bY,'Correlation');
             else
-                [tmp_bmim{iter},tmp_bimcoh{iter},tmp_bimcoh_svd{iter}] = data2mim(bX,bY,opt);
+                [tmp_bmim{iter},tmp_bimcoh_svd{iter},tmp_bmvlagcoh{iter},tmp_blagcoh_svd{iter}] = data2lagconn(bX,bY,opt);
             end
         end
         if ~isfield(opt,'segleng')
@@ -108,8 +109,9 @@ elseif opt.nRandomisation > 1
             brc(s,:) = cat(2,tmp_brc{:});
         else
             bmim(s,:) = cat(2,tmp_bmim{:});
-            bimcoh(s,:) = cat(2,tmp_bimcoh{:});
             bimcoh_svd(s,:) = cat(2,tmp_bimcoh_svd{:});
+            bmvlagcoh(s,:) = cat(2,tmp_bmvlagcoh{:});
+            blagcoh_svd(s,:) = cat(2,tmp_blagcoh_svd{:});
         end
     end
 end
@@ -124,8 +126,9 @@ if ~isfield(opt,'segleng')
     MVconn.RCA = rc;
 else
     MVconn.MIM = mim;
-    MVconn.ImCoh = imcoh;
-    MVconn.ImCohPC = imcoh_svd;
+    MVconn.ImCohSVD = imcoh_svd;
+    MVconn.MVLagCoh = mvlagcoh;
+    MVconn.LagCohSVD = lagcoh_svd;
 end
 
 if ~isfield(opt,'segleng')
@@ -137,8 +140,9 @@ if ~isfield(opt,'segleng')
     MVconn_null.RCA = mean(brc,2);
 else
     MVconn_null.MIM = mean(bmim,2);
-    MVconn_null.ImCoh = mean(bimcoh,2);
     MVconn_null.ImCohSVD = mean(bimcoh_svd,2);
+    MVconn_null.MVLagCoh = mean(bmvlagcoh,2);
+    MVconn_null.LagCohSVD = mean(blagcoh_svd,2);
 end
 
 return
