@@ -109,8 +109,8 @@ else
     close(FIG)
     FIG=figure('name',fnam,'Color','w','Position',[1 1 2*560 1*480]);
     subplot(1,2,1), hold on
-    c = categorical({'1 ImCoh','2 ImCoh-SVD','3 MIM'});
-    allval = [MVconn.ImCoh MVconn_null.ImCohSVD MVconn.MIM];
+    c = categorical({'1 ImCoh-SVD','2 LagCoh-SVD','3 MIM','4 MVLagCoh'});
+    allval = [MVconn.ImCohSVD MVconn.LagCohSVD MVconn.MIM MVconn.MVLagCoh];
     meanvl = mean(allval);
     spread = std(allval);
     % spread = iqr(allval);
@@ -147,7 +147,7 @@ else
         title('F. Normalised Performance')
     else
         subplot(1,2,2), hold on
-        allnul = [MVconn_null.ImCoh MVconn_null.ImCohSVD MVconn_null.MIM];
+        allnul = [MVconn_null.ImCohSVD MVconn_null.LagCohSVD MVconn_null.MIM MVconn_null.MVLagCoh];
         % meanvl = meanvl - mean(allnul);
         % spread = sqrt(spread.^2 + var(allnul));
         meanvl = mean(allval - allnul);
