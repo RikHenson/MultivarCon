@@ -18,7 +18,7 @@ function [MVconn,MVconn_null] = computeMVconn(X,Y,opt)
 % 
 % outputs:
 %        MVconn: contains the following fields:
-%               FC, FCSVD, MVPD, LPRD, dCor, RCA (MIM, ImCohSVD, MVLagCoh, LagCohSVD)
+%               FC, FCSVD, FCCCA, MVPD, LPRD, dCor, RCA (MIM, ImCohSVD, MVLagCoh, LagCohSVD
 %               each is a column vector with one number per subject.
 %        MVconn_null: contains the same fields as MVconn. Each would be a
 %        matrix with size of nSubjects x nRandomisations.
@@ -43,7 +43,7 @@ end
 % Calculate connectivity on given data
 for s=1:nSub
     if ~isfield(opt,'segleng') 
-        [mvpd(s,1),lprd(s,1),fc(s,1),fc_svd(s,1)] = data2mvpd_lprd_fc(X{s},Y{s},opt); 
+        [mvpd(s,1),lprd(s,1),fc(s,1),fc_svd(s,1),fc_cca(s,1)] = data2mvpd_lprd_fc(X{s},Y{s},opt); 
         [dcor(s,1),dcor_u(s,1)] = data2dCor(X{s},Y{s});
         [rc(s,1),~] = data2rc(X{s},Y{s},'Correlation');
     else
@@ -57,6 +57,7 @@ bmvpd       = NaN(nSub,opt.nRandomisation);
 blprd       = NaN(nSub,opt.nRandomisation);
 bfc         = NaN(nSub,opt.nRandomisation);
 bfc_svd     = NaN(nSub,opt.nRandomisation);
+bfc_cca     = NaN(nSub,opt.nRandomisation);
 bdcor       = NaN(nSub,opt.nRandomisation);
 brc         = NaN(nSub,opt.nRandomisation);
 bmim        = NaN(nSub,opt.nRandomisation);
@@ -76,7 +77,7 @@ if opt.nRandomisation == 1 %if only one, then don't bother with parfor like belo
             bY{r} = Y{s}{r}(randperm(size(Y{s}{r},1)),:);
         end
         if ~isfield(opt,'segleng')
-            [bmvpd(s,iter),blprd(s,iter),bfc(s,iter),bfc_svd(s,iter)] = data2mvpd_lprd_fc(bX,bY,opt);
+            [bmvpd(s,iter),blprd(s,iter),bfc(s,iter),bfc_svd(s,iter),bfc_cca(s,iter)] = data2mvpd_lprd_fc(bX,bY,opt);
             [bdcor(s,iter),bdcor_u(s,iter)] = data2dCor(bX,bY);
             [brc(s,iter),~] = data2rc(bX,bY,'Correlation');
         else
@@ -93,7 +94,7 @@ elseif opt.nRandomisation > 1
                 bY{r} = Y{s}{r}(randperm(size(Y{s}{r},1)),:);
             end
             if ~isfield(opt,'segleng')
-                [tmp_bmvpd{iter},tmp_blprd{iter},tmp_bfc{iter},tmp_bfc_svd{iter}] = data2mvpd_lprd_fc(bX,bY,opt);
+                [tmp_bmvpd{iter},tmp_blprd{iter},tmp_bfc{iter},tmp_bfc_svd{iter},tmp_bfc_cca{iter}] = data2mvpd_lprd_fc(bX,bY,opt);
                 [tmp_bdcor{iter},~] = data2dCor(bX,bY);
                 [tmp_brc{iter},~] = data2rc(bX,bY,'Correlation');
             else
@@ -105,6 +106,7 @@ elseif opt.nRandomisation > 1
             blprd(s,:) = cat(2,tmp_blprd{:});
             bfc(s,:) = cat(2,tmp_bfc{:});
             bfc_svd(s,:) = cat(2,tmp_bfc_svd{:});
+            bfc_cca(s,:) = cat(2,tmp_bfc_cca{:});
             bdcor(s,:) = cat(2,tmp_bdcor{:});
             brc(s,:) = cat(2,tmp_brc{:});
         else
@@ -120,6 +122,7 @@ fprintf('\n')
 if ~isfield(opt,'segleng')
     MVconn.FC = fc;
     MVconn.FCSVD = fc_svd;
+    MVconn.FCCCA = fc_cca;
     MVconn.MVPD = mvpd;
     MVconn.LPRD = lprd;
     MVconn.dCor = dcor;
@@ -134,6 +137,7 @@ end
 if ~isfield(opt,'segleng')
     MVconn_null.FC = mean(bfc,2);
     MVconn_null.FCSVD = mean(bfc_svd,2);
+    MVconn_null.FCCCA = mean(bfc_cca,2);
     MVconn_null.MVPD = mean(bmvpd,2);
     MVconn_null.LPRD = mean(blprd,2);
     MVconn_null.dCor = mean(bdcor,2);
@@ -146,3 +150,4 @@ else
 end
 
 return
+
