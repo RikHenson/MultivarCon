@@ -1,4 +1,4 @@
-function [mvpd,lprd,fc,fc_svd]=data2mvpd_lprd_fc(X,Y,options);
+function [mvpd,lprd,fc,fc_svd,fc_cca]=data2mvpd_lprd_fc(X,Y,options);
 % calculates the MultiVariate Pattern Dependence (MVPD) between two
 % multivariate time series (Anzellotti et al. 2017, Plos Comput Biol), the
 % linearly predicted representational dissimilarity (LPRD) metric (Basti et al. 2019), 
@@ -19,9 +19,10 @@ function [mvpd,lprd,fc,fc_svd]=data2mvpd_lprd_fc(X,Y,options);
 % mvpd:       MVPD value.
 % lprd:       LPRD value (correlation between estimated and actual RDM)
 % fc:         Pearson correlation coefficient between average time series.
-% fc_svd:     Pearson correlation coefficient between first two SVs.
+% fc_svd:     Pearson correlation coefficient between first SVs.
+% fc_cca:     Pearson correlation coefficient between first canonical vectors.
 % Alessio Basti
-% version: 29/07/2019
+% version: 01/05/2020
 
 for r=1:length(X)
     % get the voxel-average time-series
@@ -36,6 +37,9 @@ for r=1:length(X)
     [C1_a]=dimreduction(X{r},'svd_ndir',opt);
     [C1_b]=dimreduction(Y{r},'svd_ndir',opt);
     fc_SVs_app(r) = abs(corr(C1_a,C1_b)); % abs because sign of first SV arbitrary
+    
+    [Acca Bcca Rcca]=canoncorr(X{r},Y{r});
+    fc_CCA_app(r) = Rcca(1);
 end
 
 method=zeros(2,1);
@@ -107,5 +111,6 @@ mvpd=method(1)/length(X_app);
 lprd=mean(lprd(:,1));
 fc=mean(fc_app);
 fc_svd=mean(fc_SVs_app);
+fc_cca=mean(fc_CCA_app);
 
 end
