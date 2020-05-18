@@ -31,7 +31,7 @@ rois = unique([rois1 rois2]);
 Nroi1 = length(rois1)
 Nroi2 = length(rois2)
 
-Nscram = 0;
+Nscram = 20;
 Orthog = 0; % whether to orthogonalise (remove 0-lag) (only applies to MEG below actually)
 
 Nsubj = 20;
@@ -196,18 +196,23 @@ for f=1:length(fs)
 end
 fprintf('\n')
 
-% Binarize, ie number of connections > 0
-bres = []; 
-for s = 1:size(res,1)
-    for f = 1:size(res,3)
-        bres(s,f) = length(find(res(s,:,f)>0));
-    end
-end
-bres = mean(bres);
-for f=1:length(fs)
-    fprintf('%3.1f\t',bres(f))
-end
-fprintf('\n')
+
+FIG=figure('name','fMRI_data','Color','w','Position',[1 1 2*560 1.5*480]); hold on
+c = categorical({'ImCoh','LagCoh','MIM','MVLagCoh'});
+reord = [2 4 1 3];
+meanvl = mean(meanROI(:,reord));
+spread = std(meanROI(:,reord));
+bar([1:length(reord)],meanvl,'FaceColor',[0.75,0.75,0.75])
+set(gca,'XTick',[1:length(reord)],'XTickLabel',c)
+errorbar([1:length(reord)],meanvl,spread,'ko','MarkerSize',1,'CapSize',15)
+ylabel('Mean +/- SD')
+yyaxis right
+bar([1:length(reord)],meanvl./spread,0.4,'FaceColor',[0 0 1],'FaceAlpha',0.3)
+ylabel('Mean/SD')
+temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
+title('Homology Effect')
+saveas(gcf,fullfile('Graphics','meg_example.png'),'png')
+
 
 % Mean across subjects, count best method per connection (only works if normalised by scrambled data)
 cb = [];
@@ -225,32 +230,52 @@ if Nscram > 0
     fprintf('\n')
 end
 
+
 % Are connections where MV does better ones with more PCs:
-PCs = cat(2,minPC{:})';
-mPCs = mean(PCs);
-wm = unique(cb)
-for w=1:length(wm)
-    mPC(w) = mean(mPCs(find(cb==wm(w))));
+PCs = mean(cat(2,minPC{:})');
+mPC = zeros(1,length(fs));
+for f=1:length(fs)
+    Best = find(cb==f);
+    if ~isempty(Best)
+        mPC(f) = mean(PCs(Best));
+    end
 end
 mPC
 %[mean(PCs); cb]
 
+FIG=figure('name','fMRI_data','Color','w','Position',[1 1 2*560 1.5*480]); hold on
+if CV
+    c = categorical({'Pearson','Pearson-SVD','Pearson-CCA','MVPD', 'dCor','Pearson-RCA','LPRD'});
+    reord = [1 2 8 3 4 5 6];
+else
+    c = categorical({'Pearson','Pearson-SVD','Pearson-CCA', 'dCor','Pearson-RCA'});
+    reord = [1 2 5 3 4];
+end
+meanvl = cn(reord);
+bar([1:length(reord)],meanvl,'FaceColor',[0.75,0.75,0.75])
+set(gca,'XTick',[1:length(reord)],'XTickLabel',c)
+ylabel('Number Best')
+yyaxis right
+meanvl = mPC(reord);
+bar([1:length(reord)],meanvl,0.4,'FaceColor',[0 0 1],'FaceAlpha',0.3)
+ylabel('Mean Dim')
+temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
+title('Homology Effect (across ROIs)')
+saveas(gcf,fullfile('Graphics','meg_example_ROIs.png'),'png')
+
+
+% % Binarize, ie number of connections > 0
+% bres = []; 
+% for s = 1:size(res,1)
+%     for f = 1:size(res,3)
+%         bres(s,f) = length(find(res(s,:,f)>0));
+%     end
+% end
+% bres = mean(bres);
+% for f=1:length(fs)
+%     fprintf('%3.1f\t',bres(f))
+% end
+% fprintf('\n')
+
 return
 
-
-
-wc_bc = []; nwc_bc = [];
-for f=1:length(fs)
-    for subj=1:Nsubj
-        %figure,imagesc(allFC{subj}{1}.(fs{f}))
-        for ps = 1:(Nscram+1)
-%            wc_bc(subj,f,ps) = allFC{subj}{ps}.(fs{f})(1,1);
-           wc_bc(subj,f,ps) = allFC{subj}{ps}.(fs{f})(1,1) - (allFC{subj}{ps}.(fs{f})(1,2) + allFC{subj}{ps}.(fs{f})(2,1))/2;
-        end
-%        nwc_bc(subj,f) =  wc_bc(subj,f,1);
-%       nwc_bc(subj,f) =  (wc_bc(subj,f,1)-mean(wc_bc(subj,f,2:end)));        
-        nwc_bc(subj,f) =  (wc_bc(subj,f,1)-mean(wc_bc(subj,f,2:end)))/std(wc_bc(subj,f,2:end));
-    end
-end
-nwc_bc
-mean(nwc_bc)./std(nwc_bc)
