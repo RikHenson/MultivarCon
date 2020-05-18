@@ -221,8 +221,8 @@ yyaxis right
 bar([1:length(reord)],meanvl./spread,0.4,'FaceColor',[0 0 1],'FaceAlpha',0.3)
 ylabel('Mean/SD')
 temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
-title('Homology Effect')
-saveas(gcf,fullfile('Graphics',sprintf('fmri_example_CV%d.png',CV)),'png')
+title('Homology Effect (across subjects)')
+saveas(gcf,fullfile('Graphics',sprintf('fmri_example_Subjects_CV%d.png',CV)),'png')
 
 
 % Mean across subjects, count best method per connection (only works if normalised by scrambled data)
@@ -240,7 +240,6 @@ if Nscram > 0
     end
     fprintf('\n')
 end
-
 
 % Are connections where MV does better ones with more PCs:
 PCs = mean(cat(2,minPC{:})');

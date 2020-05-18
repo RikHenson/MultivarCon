@@ -197,7 +197,7 @@ end
 fprintf('\n')
 
 
-FIG=figure('name','fMRI_data','Color','w','Position',[1 1 2*560 1.5*480]); hold on
+FIG=figure('name','MEG_data','Color','w','Position',[1 1 2*560 1.5*480]); hold on
 c = categorical({'ImCoh','LagCoh','MIM','MVLagCoh'});
 reord = [2 4 1 3];
 meanvl = mean(meanROI(:,reord));
@@ -210,14 +210,14 @@ yyaxis right
 bar([1:length(reord)],meanvl./spread,0.4,'FaceColor',[0 0 1],'FaceAlpha',0.3)
 ylabel('Mean/SD')
 temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
-title('Homology Effect')
-saveas(gcf,fullfile('Graphics','meg_example.png'),'png')
+title('Homology Effect (across subjects)')
+saveas(gcf,fullfile('Graphics','meg_example_Subjects.png'),'png')
 
 
 % Mean across subjects, count best method per connection (only works if normalised by scrambled data)
 cb = [];
 if Nscram > 0
-    meanSubj = squeeze(mean(res,1));
+    meanSubj = squeeze(mean(res(:,:,1:4),1)); % exclude non-lagged FC measures
     cn = zeros(1,size(meanSubj,2));
     for r=1:size(meanSubj,1)
         [~,f] = max(meanSubj(r,:));
@@ -243,14 +243,9 @@ end
 mPC
 %[mean(PCs); cb]
 
-FIG=figure('name','fMRI_data','Color','w','Position',[1 1 2*560 1.5*480]); hold on
-if CV
-    c = categorical({'Pearson','Pearson-SVD','Pearson-CCA','MVPD', 'dCor','Pearson-RCA','LPRD'});
-    reord = [1 2 8 3 4 5 6];
-else
-    c = categorical({'Pearson','Pearson-SVD','Pearson-CCA', 'dCor','Pearson-RCA'});
-    reord = [1 2 5 3 4];
-end
+FIG=figure('name','MEG_data','Color','w','Position',[1 1 2*560 1.5*480]); hold on
+c = categorical({'ImCoh','LagCoh','MIM','MVLagCoh'});
+reord = [2 4 1 3];
 meanvl = cn(reord);
 bar([1:length(reord)],meanvl,'FaceColor',[0.75,0.75,0.75])
 set(gca,'XTick',[1:length(reord)],'XTickLabel',c)
