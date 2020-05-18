@@ -126,7 +126,7 @@ F=length(cs(1,1,:));
 for f=1:F
     lagcoh(1,2)=lagcoh(1,2)+imag(sab(:,:,f))^2/(sa(:,:,f)*sb(:,:,f)-real(sab(:,:,f))^2);
 end
-lagcoh=lagcoh(1,2)/F;
+lagcoh=real(lagcoh(1,2)/F);
 
 return
 

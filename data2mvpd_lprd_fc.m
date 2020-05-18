@@ -38,7 +38,23 @@ for r=1:length(X)
     [C1_b]=dimreduction(Y{r},'svd_ndir',opt);
     fc_SVs_app(r) = abs(corr(C1_a,C1_b)); % abs because sign of first SV arbitrary
     
-    [Acca Bcca Rcca]=canoncorr(X{r},Y{r});
+   % Still need to apply some SVD for CCA to work (though still >1 dim hopefully!)
+    opt2.percentage = 90; opt2.meancorrection = 1;
+    Xr{r} = dimreduction(X{r},'svd_exvar',opt2);
+    Yr{r} = dimreduction(Y{r},'svd_exvar',opt2);
+              
+    % Also check that CCA is estimable (more timepoints than sum of voxels of two ROIs)
+    numTP = size(Xr{r},1); % Y{r} must have same 
+    minTP = size(Xr{r},2) + size(Yr{r},2);
+    cca_opt = opt;
+    if numTP <= minTP
+        cca_opt.number = min((size(Xr{1},2)-1),floor((numTP-1)/2)); % assuming numTP>2!
+        Xr{r} = dimreduction(Xr{r},'svd_ndir',cca_opt);
+        cca_opt.number = min((size(Yr{1},2)-1),floor((numTP-1)/2)); % assuming numTP>2!
+        Yr{r} = dimreduction(Yr{r},'svd_ndir',cca_opt);
+    end    
+    
+    [Acca Bcca Rcca]=canoncorr(Xr{r},Yr{r});
     fc_CCA_app(r) = Rcca(1);
 end
 
