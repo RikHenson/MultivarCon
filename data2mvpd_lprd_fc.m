@@ -51,7 +51,7 @@ for r=1:length(X)
         cca_opt.number = min((size(Xr{1},2)-1),floor((numTP-1)/2)); % assuming numTP>2!
         Xr{r} = dimreduction(Xr{r},'svd_ndir',cca_opt);
         cca_opt.number = min((size(Yr{1},2)-1),floor((numTP-1)/2)); % assuming numTP>2!
-        Yr{r} = dimreduction(Yr{r},'svd_ndir',cca_opt);
+        Yr{r} = dimreduction(Yr{r},'svd_ndir',cca_opt);       
     end    
     
     [Acca Bcca Rcca]=canoncorr(Xr{r},Yr{r});

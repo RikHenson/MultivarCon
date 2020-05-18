@@ -38,7 +38,7 @@ for r=1:length(X)
         cca_opt.number = min((size(X{1},2)-1),floor((numTP-1)/2)); % assuming numTP>2!
         X{r} = dimreduction(X{r},'svd_ndir',cca_opt);
         cca_opt.number = min((size(Y{1},2)-1),floor((numTP-1)/2)); % assuming numTP>2!
-        Y{r} = dimreduction(Y{r},'svd_ndir',cca_opt);
+        Y{r} = dimreduction(Y{r},'svd_ndir',cca_opt);       
     end    
     [Acca Bcca Rcca]=canoncorr(X{r},Y{r});
     fc_CCA_app(r) = Rcca(1);
