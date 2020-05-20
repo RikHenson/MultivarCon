@@ -15,8 +15,8 @@ opt.meancorrection = 1; % for dimension reduction (overwritten for pca_fc in dat
 opt.regularisation = 10.^(-1:0.2:3); % regularisation parameter for ridge regression.
 opt.zscore = 0; % Whether to Z-score timeseries for dCor
 opt.segleng=100;    % length (in bins) of the segment used for the cross-spectrum computation,
-%opt.freqbins=[4:48]+1; % theta,alpha,beta,low gamma
-opt.freqbins=[13:30]+1; % beta (eg for just motor ROIs)
+opt.freqbins=[4:48]+1; % theta,alpha,beta,low gamma
+%opt.freqbins=[13:30]+1; % beta (eg for just motor ROIs)
 
 rois1 = [1:48];     % All HOA cortical ROIs on Left
 rois2 = rois1+48;   % All HOA cortical ROIs on Right
@@ -26,7 +26,7 @@ rois = unique([rois1 rois2]);
 Nroi1 = length(rois1)
 Nroi2 = length(rois2)
 
-Nscram = 20;
+Nscram = 0;
 
 cd(bwd)
 
@@ -82,7 +82,6 @@ parfor subj = 1:Nsubj
             fprintf('%d.',ps-1)
             
             fc = nan(1,Nroi2); fc_svd = fc;
-            mvpd = fc; lprd = fc; dcor = fc; rc_w = fc; rc_b = fc; cca = fc;
             mim = fc; imcoh_svd = fc; mvlagcoh = fc; lagcoh_svd = fc;
             
             for r2 = 1:Nroi2
@@ -102,6 +101,7 @@ parfor subj = 1:Nsubj
             % Collect up measures into structure (in case parfor)
             FC{ps} = struct('mim',mim,'imcoh_svd',imcoh_svd,'mvlagcoh',mvlagcoh,'lagcoh_svd',lagcoh_svd,'fc',fc,'fc_svd',fc_svd);
         end
+        fprintf('\n')
         
         fs = fieldnames(FC{1});
         pFC = nan(length(fs),Nscram+1,Nroi2); nFC = nan(length(fs),Nroi2);
@@ -136,7 +136,7 @@ for subj = 1:Nsubj
     end
 end
 
-save(sprintf('MEG_Results_Freq%d-%d_Nscram%d',opt.freqbins(1)-1,opt.freqbins(end)-1,Nscram),'res','allFC','Nscram','nPC')
+save(sprintf('MEG_Results_Freq%d-%d',opt.freqbins(1)-1,opt.freqbins(end)-1),'res','allFC','Nscram','nPC')
 
 cd(bwd)
 
@@ -170,10 +170,10 @@ bar([1:length(reord)],meanvl./spread,0.4,'FaceColor',[0 0 1],'FaceAlpha',0.3)
 ylabel('Mean/SD')
 temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
 title('Homology Effect (across subjects)')
-saveas(gcf,fullfile('Graphics','meg_example_Subjects_Nscram0.png'),'png')
+saveas(gcf,fullfile('Graphics','meg_example_Subjects.png'),'png')
 
 
-% Mean across subjects, count best method per connection (only works if normalised by scrambled data)
+% Mean across subjects, count best method per connection 
 cb = [];
 meanSubj = squeeze(mean(res(:,:,1:4),1)); % exclude non-lagged FC measures
 if Nscram == 0
@@ -215,7 +215,7 @@ bar([1:length(reord)],meanvl,0.4,'FaceColor',[0 0 1],'FaceAlpha',0.3)
 ylabel('Mean Dim')
 temp = get(gca,'YLim');set(gca,'YLim',[temp(1)-.1,temp(2)+.1])
 title('Homology Effect (across ROIs)')
-saveas(gcf,fullfile('Graphics','meg_example_ROIs_Nscram0.png'),'png')
+saveas(gcf,fullfile('Graphics','meg_example_ROIs.png'),'png')
 
 
 % % Binarize, ie number of connections > 0
@@ -232,4 +232,5 @@ saveas(gcf,fullfile('Graphics','meg_example_ROIs_Nscram0.png'),'png')
 % fprintf('\n')
 
 return
+
 

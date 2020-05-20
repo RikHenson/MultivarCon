@@ -24,15 +24,7 @@ Nroi2 = length(rois2)
 
 CV = 1; % Whether cross-validate or not (produces different measures in case of fMRI)
 win = {[1:121] [141:261]}; % indices of windows for fMRI (if use CV)
-Nscram = 20;
-
-Nsubj = 20;
-NumWorkers = Nsubj;
-%NumWorkers = Nroi1;
-%NumWorkers = max(Nscram);
-P = cbupool(NumWorkers);
-P.SubmitArguments = sprintf('--ntasks=%d --mem-per-cpu=4G --time=72:00:00',NumWorkers);
-parpool(P,NumWorkers)
+Nscram = 0;
 
 cd(bwd)
 
@@ -41,13 +33,23 @@ try mkdir(wd); end
 cd(wd)
 
 fnames = dir('CC*');
+Nsubj = length(fnames)
 
-wc_bc = cell(Nsubj,1); allFC = wc_bc; minPC = wc_bc;
+% Code written flexibly below so can parfor across longest dimension (subjects, ROIs or scramblings)
+NumWorkers = Nsubj;
+%NumWorkers = Nroi1;
+%NumWorkers = Nscram+1;
+P = cbupool(NumWorkers);
+P.SubmitArguments = sprintf('--ntasks=%d --mem-per-cpu=4G --time=72:00:00',NumWorkers);
+% parpool(P,NumWorkers)
+
+minPC = cell(Nsubj,1); allFC = minPC; wc_bc = minPC;
 tic
 %for subj = 1:Nsubj
 parfor subj = 1:Nsubj
-    fprintf('\n%d %s\n',subj,fnames(subj).name)
+    fprintf('%d %s\n',subj,fnames(subj).name)
     
+    minPC{subj} = cell(1,Nroi1); allFC{subj} = minPC{subj}; wc_bc{subj} = minPC{subj};
     % load data
     tmp = rikload(fnames(subj).name);
     
@@ -59,129 +61,100 @@ parfor subj = 1:Nsubj
     end
     tmp = [];
     
-    odat = dat; FC = {};
-    minPC{subj} = nan(Nroi1,1);
-    %     parfor ps = 1:(Nscram+1) % ps==1 corresponds to true data
-    for ps = 1:(Nscram+1) % ps==1 corresponds to true data
+    %parfor r1 = 1:Nroi1
+    for r1 = 1:Nroi1
+        fprintf('ROI %d\n',r1)
         
-        dat = {};
-        fprintf('Iteration %d\n',ps-1)
-        if ps > 1
-            for roi = rois
-                dat{roi} = phase_rand(odat{roi}, 1, 1); % Third argument means common scrambling across voxels
-            end
+        % Get data for ROI1
+        X = {};
+        if ~CV
+            X = {dat{rois1(r1)}};
         else
-            dat = odat;
-        end
-        
-        fc = cell(Nroi1,1); for r=1:Nroi1, fc{r} = NaN(1,Nroi1); end; fc_svd = fc;
-        mvpd = fc; lprd = fc; dcor = fc; rc_w = fc; rc_b = fc; cca = fc;
-        mim = fc; imcoh_svd = fc; mvlagcoh = fc; lagcoh_svd = fc;
-        %         parfor r1 = 1:Nroi1
-        for r1 = 1:Nroi1
-            fprintf('%d.',r1)
-            %warning off % Just in case in parfor loop and CCA warnings because more voxels than scans
-            
-            % Get data for ROI1
-            if ~CV
-                X = {dat{rois1(r1)}};
-            else
-                X = {};
-                for run = 1:length(win)
-                    X{run} = dat{rois1(r1)}(win{run},:);
-                end
+            for run = 1:length(win)
+                X{run} = dat{rois1(r1)}(win{run},:);
             end
+        end
+     
+        opt2 = opt; opt2.percentage = 95; opt2.meancorrection = 0;
+        tmp = dimreduction(X{1},'svd_exvar',opt2);
+        minPC{subj}{r1} = size(tmp,2); % Just take first run for this
+        
+        FC = cell(1,Nscram+1);   
+        fprintf('Iteration: ')
+%       parfor ps = 1:(Nscram+1) % ps==1 corresponds to true data
+        for ps = 1:(Nscram+1) % ps==1 corresponds to true data
             
-            opt2 = opt; opt2.percentage = 95; opt2.meancorrection = 0;
-            rX = dimreduction(X{1},'svd_exvar',opt2);
-            minPC{subj}(r1) = size(rX,2); % Just take first run for this
-            opt2.number = minPC{subj}(r1);
-            
-            % get data for ROI2
-            for r2 = 1:length(rois2)
-                %                for r2 = [r1 rem(r1,Nroi1)+1];
-                
+            fprintf('%d.',ps-1)
+
+            fc = nan(1,Nroi2); fc_svd = fc; cca = fc;
+            mvpd = fc; lprd = fc; dcor = fc; rc_w = fc; rc_b = fc; 
+             
+            for r2 = 1:Nroi2               
+                % get data for ROI2               
                 if ~CV
                     Y = {dat{rois2(r2)}};
-                    [fc{r1}(r2),fc_svd{r1}(r2),cca{r1}(r2)] = data2UVFC(X,Y);
-                    %[~,~,fc{r1}(r2),fc_svd{r1}(r2)] = data2mvpd_lprd_fc(X,Y,opt);
-                    [dcor{r1}(r2),~] = data2dCor(X,Y);
-                    [rc_w{r1}(r2),rc_b{r1}(r2)] = data2rc(X,Y,'Correlation');
-                    [rc_w{r1}(r2),~] = data2rc(X,Y,'Correlation');
+                    if ps > 1
+                        Y{1} = phase_rand(Y{1}, 1, 1); % Third argument means common scrambling across voxels
+                    end
+                    
+                    [fc(r2),fc_svd(r2),cca(r2)] = data2UVFC(X,Y);
                 else
                     Y = {};
                     for run = 1:length(win)
                         Y{run} = dat{rois2(r2)}(win{run},:);
+                        if ps > 1
+                            Y{run} = phase_rand(Y{run}, 1, 1); % Third argument means common scrambling across voxels
+                        end
                     end
-                    [mvpd{r1}(r2),lprd{r1}(r2),fc{r1}(r2),fc_svd{r1}(r2),cca{r1}(r2)] = data2mvpd_lprd_fc(X,Y,opt);
-                    [dcor{r1}(r2),~] = data2dCor(X,Y);
-                    [rc_w{r1}(r2),rc_b{r1}(r2)] = data2rc(X,Y,'Correlation');
+                    
+                    [mvpd(r2),lprd(r2),fc(r2),fc_svd(r2),cca(r2)] = data2mvpd_lprd_fc(X,Y,opt);
                 end
+                [dcor(r2),~] = data2dCor(X,Y);
+                [rc_w(r2),rc_b(r2)] = data2rc(X,Y,'Correlation');
             end
-        end
-        
-        % Collect up measures into structure (in case parfor)
-        if ~CV
-            FC{ps} = struct('fc',cat(1,fc{:}),'fc_svd',cat(1,fc_svd{:}),'dcor',cat(1,dcor{:}),'rc_w',cat(1,rc_w{:}),'cca',cat(1,cca{:}));
-        else
-            FC{ps} = struct('fc',cat(1,fc{:}),'fc_svd',cat(1,fc_svd{:}),'mvpd',cat(1,mvpd{:}),'lprd',cat(1,lprd{:}),'dcor',cat(1,dcor{:}),'rc_w',cat(1,rc_w{:}),'rc_b',cat(1,rc_b{:}),'cca',cat(1,cca{:}));
+            
+            if ~CV
+                FC{ps} = struct('fc',fc,'fc_svd',fc_svd,'dcor',dcor,'rc_w',rc_w,'cca',cca);
+            else
+                FC{ps} = struct('fc',fc,'fc_svd',fc_svd,'mvpd',mvpd,'lprd',lprd,'dcor',dcor,'rc_w',rc_w,'rc_b',rc_b,'cca',cca);
+            end
         end
         fprintf('\n')
-    end
-    fprintf('\n')
-    
-    fprintf('Min/Max Dim: %d %d\n',min(minPC{subj}), max(minPC{subj}));
-    
-    fs = fieldnames(FC{1});
-    %         figure,
-    %         for f=1:length(fs)
-    %             subplot(3,2,f)
-    %             imagesc(FC{1}.(fs{f}))
-    %             axis square
-    %             title(fs{f})
-    %         end
-    
-    % Calculate homologous minus mean on non-homologous connectivity (assuming ROIs organised that way)
-    pFC = []; nFC = [];
-    for f=1:length(fs)
-        %figure,imagesc(FC{1}.(fs{f}))
-        for ps = 1:(Nscram+1)
-            pFC(ps,:,:) = FC{ps}.(fs{f});
-        end
-        if Nscram > 1 % Care: normalisation below requires reaosnably big Nscram!
-            for r1 = 1:Nroi1
-                for r2 = 1:Nroi2
-                    %for r2 = [r1 rem(r1,Nroi1)+1]
-                    nFC(r1,r2) = (pFC(1,r1,r2) - mean(pFC(2:end,r1,r2))) / std(pFC(2:end,r1,r2));
-                end
-            end
-        else
-            nFC = squeeze(pFC);
-        end
-        %figure,imagesc(nFC)
         
-        for r1 = 1:Nroi1
-            if Nroi1 > 1 | Nscram > 1
-                wc_bc{subj}(r1,f) = nFC(r1,r1) - mean(nFC(r1,setdiff([1:Nroi2],r1)));
-                %                wc_bc{subj}(r1,f) = nFC(r1,r1) - nFC(r1,rem(r1,Nroi1)+1);
-            else
-                wc_bc{subj}(r1,f) = nFC(r1,r1) - mean(nFC(setdiff([1:Nroi2],r1),r1));
+        fs = fieldnames(FC{1});
+        pFC = nan(length(fs),Nscram+1,Nroi2); nFC = nan(length(fs),Nroi2);
+        for f=1:length(fs)
+            %figure,imagesc(FC{1}.(fs{f}))
+            for ps = 1:(Nscram+1)
+                pFC(f,ps,:) = FC{ps}.(fs{f});
             end
+            if Nscram > 1 % Care: normalisation below requires reaosnably big Nscram!
+                for r2 = 1:Nroi2
+                    nFC(f,r2) = (pFC(f,1,r2) - mean(pFC(f,2:end,r2))) / std(pFC(f,2:end,r2));
+                end
+            else
+                nFC(f,:) = squeeze(pFC(f,1,:));
+            end
+            %figure,imagesc(nFC)
+            
+            % Calculate homologous minus mean on non-homologous connectivity (assuming ROIs organised that way)
+            wc_bc{subj}{r1}(f) = nFC(f,r1) - mean(nFC(f,setdiff([1:Nroi2],r1)));
         end
+        
+        allFC{subj}{r1} = FC;       
     end
-    
-    allFC{subj} = FC;
-    mean(wc_bc{subj})
-    mean(wc_bc{subj})./std(wc_bc{subj})
 end
 toc
 
-res = [];
-for s = 1:Nsubj
-    res(s,:,:) = wc_bc{s};
+res = []; nPC = [];
+for subj = 1:Nsubj
+    for r1 = 1:Nroi1
+        nPC(subj,r1) = minPC{subj}{r1};        
+        res(subj,r1,:) = wc_bc{subj}{r1};
+    end
 end
 
-save(sprintf('fMRI_Results_CV%d_Nscram%d',CV,Nscram),'res','allFC','Nscram','minPC')
+save('fMRI_Results','res','allFC','Nscram','nPC')
 
 cd(bwd)
 
@@ -189,27 +162,25 @@ return
 
 % Mean connections
 meanROI= squeeze(mean(res,2));
-fs = fieldnames(allFC{1}{1});
+fs = fieldnames(allFC{1}{1}{1});
 for f=1:length(fs)
     fprintf('%s\t',fs{f})
 end
 fprintf('\n')
 for f=1:length(fs)
-    fprintf('M=%3.2f\t',mean(meanROI(:,f)))
+    fprintf('%3.2f\t',mean(meanROI(:,f))./std(meanROI(:,f)))
+    %mean(meanROI)
 end
 fprintf('\n')
-for f=1:length(fs)
-    fprintf('T=%3.2f\t',mean(meanROI(:,f))/(std(meanROI(:,f))/sqrt(size(meanROI,1))))
-end
-fprintf('\n')
+
 
 FIG=figure('name','fMRI_data','Color','w','Position',[1 1 2*560 1.5*480]); hold on
 if CV
     c = categorical({'Pearson','Pearson-SVD','Pearson-CCA','MVPD', 'dCor','Pearson-RCA','LPRD'});
     reord = [1 2 8 3 4 5 6];
 else
-   c = categorical({'Pearson','Pearson-SVD','Pearson-CCA', 'dCor','Pearson-RCA'});
-     reord = [1 2 5 3 4];
+    c = categorical({'Pearson','Pearson-SVD','Pearson-CCA', 'dCor','Pearson-RCA'});
+    reord = [1 2 5 3 4];
 end
 meanvl = mean(meanROI(:,reord));
 spread = std(meanROI(:,reord));
@@ -225,29 +196,31 @@ title('Homology Effect (across subjects)')
 saveas(gcf,fullfile('Graphics',sprintf('fmri_example_Subjects_CV%d.png',CV)),'png')
 
 
-% Mean across subjects, count best method per connection (only works if normalised by scrambled data)
+
+% Mean across subjects, count best method per connection 
 cb = [];
-if Nscram > 0
-    meanSubj = squeeze(mean(res,1));
-    cn = zeros(1,size(meanSubj,2));
-    for r=1:size(meanSubj,1)
-        [~,f] = max(meanSubj(r,:));
-        cn(f) = cn(f)+1;
-        cb(r) = f;
-    end
-    for f=1:length(fs)
-        fprintf('%d\t',cn(f))
-    end
-    fprintf('\n')
+meanSubj = squeeze(mean(res,1)); 
+if Nscram == 0
+    meanSubj = meanSubj./squeeze(std(res)); %normalise across subjects rather than phase-scramblings
 end
+cn = zeros(1,length(fs));
+for r=1:size(meanSubj,1)
+    [~,f] = max(meanSubj(r,:));
+    cn(f) = cn(f)+1;
+    cb(r) = f;
+end
+for f=1:length(fs)
+    fprintf('%d\t',cn(f))
+end
+fprintf('\n')
+
 
 % Are connections where MV does better ones with more PCs:
-PCs = mean(cat(2,minPC{:})');
 mPC = zeros(1,length(fs));
 for f=1:length(fs)
     Best = find(cb==f);
     if ~isempty(Best)
-        mPC(f) = mean(PCs(Best));
+        mPC(f) = mean(nPC(Best));
     end
 end
 mPC
