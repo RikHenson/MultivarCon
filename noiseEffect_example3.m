@@ -1,7 +1,7 @@
 clear;clc;close all
 % Parameter settings
 nSubj = 20;         % number of subjects (replications)
-nTime = 200;        % number of time points
+nTime = 400;        % number of time points
 nVoxs = [50 60];    % number of voxels in ROI1 and ROI2
 mVoxs = min(nVoxs);
 nRuns = 2;          % number of runs. MVPD requires at least 2 runs.
@@ -37,11 +37,12 @@ for g=1:nGammas
         end
     end
     [MVconn(g),MVconn_null(g)] = computeMVconn(X,Y,opt);
+    g
 end
 
 
 %% plot the shaded error bar
-methods = {'FC','FCSVD','MVPD','LPRD','dCor','RCA'};
+methods = {'FC','FCSVD','FCCCA','MVPD','dCor','RCA','LPRD'};
 for g=1:nGammas
     for meth = 1:numel(methods)
         allval = MVconn(g).(methods{meth});
@@ -56,10 +57,11 @@ s1=shadedErrorBar(gammas,y(:,1),se(:,1),'k');
 s2=shadedErrorBar(gammas,y(:,2),se(:,2),'b');
 s3=shadedErrorBar(gammas,y(:,3),se(:,3),'m');
 s4=shadedErrorBar(gammas,y(:,4),se(:,4),'c');
-s5=shadedErrorBar(gammas,y(:,5),se(:,5),'r');
-s6=shadedErrorBar(gammas,y(:,6),se(:,6),'g');
-legend([s1.mainLine s2.mainLine s3.mainLine s4.mainLine s5.mainLine s6.mainLine],methods,'Location','NorthWest');
-xlabel('Signal:Noise Ratio')
+s5=shadedErrorBar(gammas,y(:,5),se(:,5),'g');
+s6=shadedErrorBar(gammas,y(:,6),se(:,6),'y');
+s7=shadedErrorBar(gammas,y(:,7),se(:,7),'r');
+legend([s1.mainLine s2.mainLine s3.mainLine s4.mainLine s5.mainLine s6.mainLine s7.mainLine],methods,'Location','NorthWest');
+xlabel('SNR')
 ylabel('Normalised Performance')
 set(gca,'FontSize',18)
 set(gca,'XTick',[0 0.5 1],'XTickLabel',[0 1 Inf])
