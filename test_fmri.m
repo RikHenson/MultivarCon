@@ -41,7 +41,7 @@ NumWorkers = Nsubj;
 %NumWorkers = Nscram+1;
 P = cbupool(NumWorkers);
 P.SubmitArguments = sprintf('--ntasks=%d --mem-per-cpu=4G --time=72:00:00',NumWorkers);
-% parpool(P,NumWorkers)
+parpool(P,NumWorkers)
 
 minPC = cell(Nsubj,1); allFC = minPC; wc_bc = minPC;
 tic
@@ -154,7 +154,7 @@ for subj = 1:Nsubj
     end
 end
 
-save('fMRI_Results','res','allFC','Nscram','nPC')
+save(sprintf('fMRI_Results_CV%d',CV),'res','allFC','Nscram','nPC')
 
 cd(bwd)
 
@@ -209,6 +209,10 @@ for r=1:size(meanSubj,1)
     cn(f) = cn(f)+1;
     cb(r) = f;
 end
+for f=1:length(fs)
+    fprintf('%s\t',fs{f})
+end
+fprintf('\n')
 for f=1:length(fs)
     fprintf('%d\t',cn(f))
 end

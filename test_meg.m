@@ -186,6 +186,10 @@ for r=1:size(meanSubj,1)
     cb(r) = f;
 end
 for f=1:4
+    fprintf('%s\t',fs{f})
+end
+fprintf('\n')
+for f=1:4
     fprintf('%d\t',cn(f))
 end
 fprintf('\n')
