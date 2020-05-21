@@ -35,9 +35,9 @@ for r=1:length(X)
     minTP = size(X{r},2) + size(Y{r},2);
     cca_opt = opt;
     if numTP <= minTP
-       cca_opt.number = min((size(Xr{1},2)-1),floor((numTP-1)/2)); % assuming numTP>2!
+       cca_opt.number = min((size(Xr{r},2)-1),floor((numTP-1)/2)); % assuming numTP>2!
        Xr{r} = Xr{r}(:,1:cca_opt.number);
-       cca_opt.number = min((size(Yr{1},2)-1),floor((numTP-1)/2)); % assuming numTP>2!
+       cca_opt.number = min((size(Yr{r},2)-1),floor((numTP-1)/2)); % assuming numTP>2!
        Yr{r} = Yr{r}(:,1:cca_opt.number);
     end    
     [Acca Bcca Rcca]=canoncorr(X{r},Y{r});
