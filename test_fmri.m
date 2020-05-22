@@ -22,9 +22,9 @@ rois = unique([rois1 rois2]);
 Nroi1 = length(rois1)
 Nroi2 = length(rois2)
 
-CV = 1; % Whether cross-validate or not (produces different measures in case of fMRI)
+CV = 0; % Whether cross-validate or not (produces different measures in case of fMRI)
 win = {[1:121] [141:261]}; % indices of windows for fMRI (if use CV)
-Nscram = 0;
+Nscram = 20;
 
 cd(bwd)
 
@@ -224,7 +224,7 @@ mPC = zeros(1,length(fs));
 for f=1:length(fs)
     Best = find(cb==f);
     if ~isempty(Best)
-        mPC(f) = mean(nPC(Best));
+        mPC(f) = mean(mean(nPC(:,Best)));
     end
 end
 mPC

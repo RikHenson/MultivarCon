@@ -200,7 +200,7 @@ mPC = zeros(1,4);
 for f=1:length(fs)
     Best = find(cb==f);
     if ~isempty(Best)
-        mPC(f) = mean(nPC(Best));
+        mPC(f) = mean(mean(nPC(:,Best)));
     end
 end
 mPC
