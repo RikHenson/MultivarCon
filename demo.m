@@ -24,7 +24,7 @@ rng('default')
 
 %% First example: positively correlated activities within ROI1 and one-to-one voxel mapping
 fnam = 'Positively correlated activities within ROI1 and one-to-one voxel mapping';
-%T = rand(nVoxs);
+%T = rand(nVoxs);12
 T = zeros(nVoxs); for j=1:mVoxs; T(j,j)=1; end
 cc = 0.5;
 C = ones(nVoxs(1))*cc + eye(nVoxs(1))*(1-cc); % correlation within ROI
@@ -156,7 +156,6 @@ saveas(gcf,fullfile('Graphics','mvcon_example6.png'),'png')
 
 %% Seventh example: multivariate lagged interaction
 fnam = 'Multivariate lagged interaction';
-
 % Parameter settings
 nTime = 15360;      % number of time points, e.g. 15360 is equivalent to 60 seconds 
                     % acquisition if the resolution is 256 Hz
@@ -189,7 +188,7 @@ end
 vis = [1 2 1 2];
 [MVconn,MVconn_null] = computeMVconn(X,Y,opt);
 plotmv(fnam,T,Ca,X,Y,MVconn,MVconn_null,vis)
-saveas(gcf,fullfile('Graphics','mvcon_example8.png'),'png')
+saveas(gcf,fullfile('Graphics','mvcon_example7.png'),'png')
 
 %% Eighth example: model-based RCA and direct RCA
 % clear;clc
