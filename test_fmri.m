@@ -1,7 +1,8 @@
 
-% Could highpass filter fMRI data
+% Code for analysing CamCAN fMRI data (data available from
+% ftp://ftp.mrc-cbu.cam.ac.uk/personal/rik.henson/MDcon/CamCAN/)
 
-addpath('/home/rh01/GitHub/MultivarCon')
+addpath('GitHub/MultivarCon') % Wgere rest of code downloaded
 
 clear;clc;close all
 
