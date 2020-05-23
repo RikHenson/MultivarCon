@@ -6,7 +6,7 @@ clc;
 
 % Parameter settings
 nSubj = 20;         % number of subjects (replications)
-nTime = 200;        % number of time points
+nTime = 400;        % number of time points
 nVoxs = [50 60];    % number of voxels in ROI1 and ROI2
 mVoxs = min(nVoxs);
 nRuns = 2;          % number of runs. MVPD requires at least 2 runs.
