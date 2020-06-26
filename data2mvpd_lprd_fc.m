@@ -22,7 +22,7 @@ function [mvpd,lprd,fc,fc_svd,fc_cca]=data2mvpd_lprd_fc(X,Y,options);
 % fc_svd:     Pearson correlation coefficient between first SVs.
 % fc_cca:     Pearson correlation coefficient between first canonical vectors.
 % Alessio Basti
-% version: 01/05/2020
+% version: 26/06/2020
 
 for r=1:length(X)
     % get the voxel-average time-series
@@ -59,68 +59,66 @@ for r=1:length(X)
 end
 
 method=zeros(2,1);
-for jmet=1:1 % do we need this for loop? can't we just do jmet = 1?
-    if(jmet==1)
-        X_app=X;
-        Y_app=Y;
-    else
-        X_app=ts_a;
-        Y_app=ts_b;
-    end
-    for r=1:length(X_app)
-        
-        % let us divide the training set from the testing set
-        Xtrain=X_app;
-        Ytrain=Y_app;
-        Xtrain{r}=[];
-        Ytrain{r}=[];
-        Xtrain=vertcat(Xtrain{:});
-        Ytrain=vertcat(Ytrain{:});
-        Xtest=X_app{r};
-        Ytest=Y_app{r};
-        
-        if strcmp(options.method,'full')==1
-            % linear model estimate (ridge regression)
-            [Ttilde,~]=ridgeregmethod(Xtrain,Ytrain,options.regularisation);
-            
-            % OLS on full time series is not recommended when the number of time
-            % points is lower than the number of voxels in X
-            %Ttilde=Ytrain'*Xtrain*inv(Xtrain'*Xtrain);
-            
-            % correlation between the forecasted and the test data
-            Ytest_for=Xtest*Ttilde';
-            for icomp=1:length(Ytest_for(1,:))
-                M=corrcoef(Ytest(:,icomp),Ytest_for(:,icomp));
-                method(jmet)=method(jmet)+(var(Ytest(:,icomp))/sum(var(Ytest)))*M(1,2);
-            end
-        else
-            % application of the dimensionality reduction, e.g. selection of the directions which explain
-            % a sufficient amount of variance (coded by the input parameter 'percentage')
-            [Xtrain_red,Va,SVa]=dimreduction(Xtrain,options.method,options);
-            [Ytrain_red,Vb,SVb]=dimreduction(Ytrain,options.method,options);
-            
-            % linear model estimate (OLS)
-            Ttilde=Ytrain_red'*Xtrain_red*inv(Xtrain_red'*Xtrain_red);
-            Xtest_red=(Xtest-repmat(mean(Xtest),length(Xtest(:,1)),1))*Va;
-            Ytest_red=(Ytest-repmat(mean(Ytest),length(Ytest(:,1)),1))*Vb;
-            
-            % correlation between the forecasted and the test data
-            Ytest_for_red=Xtest_red*Ttilde';
-            for icomp=1:length(Ytest_for_red(1,:))
-                M=corrcoef(Ytest_red(:,icomp),Ytest_for_red(:,icomp));
-                method(jmet)=method(jmet)+(SVb(icomp)/sum(SVb))*M(1,2);
-            end
-        end
-        
+jmet=1;
+if(jmet==1)
+    X_app=X;
+    Y_app=Y;
+else
+    X_app=ts_a;
+    Y_app=ts_b;
+end
+for r=1:length(X_app)
+
+    % let us divide the training set from the testing set
+    Xtrain=X_app;
+    Ytrain=Y_app;
+    Xtrain{r}=[];
+    Ytrain{r}=[];
+    Xtrain=vertcat(Xtrain{:});
+    Ytrain=vertcat(Ytrain{:});
+    Xtest=X_app{r};
+    Ytest=Y_app{r};
+
+    if strcmp(options.method,'full')==1
         % linear model estimate (ridge regression)
-        zX{1}=zscore(X{r},0,2);
-        zY{1}=zscore(Y{r},0,2);
-        [Ttilde,~]=ridgeregmethod(zX{1},zY{1},options.regularisation);
-        zY_for{1}=zX{1}*Ttilde';
-        
-        % correlation between the estimated and the actual RDM for the ROI2
-        [lprd(r,jmet),~] = data2rc(zY,zY_for,'Correlation');
+        [Ttilde,~]=ridgeregmethod(Xtrain,Ytrain,options.regularisation,0);
+
+        % OLS on full time series is not recommended when the number of time
+        % points is lower than the number of voxels in X
+        %Ttilde=Ytrain'*Xtrain*inv(Xtrain'*Xtrain);
+
+        % correlation between the forecasted and the test data
+        Ytest_for=Xtest*Ttilde';
+        for icomp=1:length(Ytest_for(1,:))
+            M=corrcoef(Ytest(:,icomp),Ytest_for(:,icomp));
+            method(jmet)=method(jmet)+(var(Ytest(:,icomp))/sum(var(Ytest)))*M(1,2);
+        end
+    else
+        % application of the dimensionality reduction, e.g. selection of the directions which explain
+        % a sufficient amount of variance (coded by the input parameter 'percentage')
+        [Xtrain_red,Va,SVa]=dimreduction(Xtrain,options.method,options);
+        [Ytrain_red,Vb,SVb]=dimreduction(Ytrain,options.method,options);
+
+        % linear model estimate (OLS)
+        Ttilde=Ytrain_red'*Xtrain_red*inv(Xtrain_red'*Xtrain_red);
+        Xtest_red=(Xtest-repmat(mean(Xtest),length(Xtest(:,1)),1))*Va;
+        Ytest_red=(Ytest-repmat(mean(Ytest),length(Ytest(:,1)),1))*Vb;
+
+        % correlation between the forecasted and the test data
+        Ytest_for_red=Xtest_red*Ttilde';
+        for icomp=1:length(Ytest_for_red(1,:))
+            M=corrcoef(Ytest_red(:,icomp),Ytest_for_red(:,icomp));
+            method(jmet)=method(jmet)+(SVb(icomp)/sum(SVb))*M(1,2);
+        end
     end
+
+    % linear model estimate (ridge regression)
+    zX{1}=zscore(X{r},0,2);
+    zY{1}=zscore(Y{r},0,2);
+    [Ttilde,zY_for{1}]=ridgeregmethod(zX{1},zY{1},options.regularisation,1);
+
+    % correlation between the estimated and the actual RDM for the ROI2
+    [lprd(r,jmet),~] = data2rc(zY,zY_for,'Correlation');
 end
 
 mvpd=method(1)/length(X_app);
